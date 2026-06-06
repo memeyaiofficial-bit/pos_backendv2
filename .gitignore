@@ -1,0 +1,10 @@
+# Never upload these to GitHub
+.env
+*.db
+*.sqlite3
+__pycache__/
+.venv/
+*.pyc
+*.pyo
+.DS_Store
+pharmacy_pos.db

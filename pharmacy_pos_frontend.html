@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Flex Pharmacy POS</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* ── TOKENS ── */
+:root{
+  --f:'Outfit',sans-serif;
+  --fm:'JetBrains Mono',monospace;
+
+  /* dark theme */
+  --bg:#080c14;
+  --bg2:#0d1220;
+  --bg3:#111828;
+  --bg4:#18203a;
+  --bg5:#1f2940;
+
+  --accent:#3b82f6;
+  --accent-dim:rgba(59,130,246,.15);
+  --accent-glow:rgba(59,130,246,.08);
+
+  --emerald:#10b981;
+  --emerald-dim:rgba(16,185,129,.12);
+  --amber:#f59e0b;
+  --amber-dim:rgba(245,158,11,.12);
+  --rose:#f43f5e;
+  --rose-dim:rgba(244,63,94,.12);
+  --violet:#8b5cf6;
+  --violet-dim:rgba(139,92,246,.12);
+  --cyan:#06b6d4;
+
+  --text:#f0f4ff;
+  --text2:#8b9cc8;
+  --text3:#3d4e72;
+  --border:rgba(255,255,255,.06);
+  --border2:rgba(255,255,255,.11);
+
+  --r:10px;--r2:7px;
+  --sidebar:228px;
+  --topbar:54px;
+}
+
+[data-theme="light"]{
+  --bg:#f4f6fb;
+  --bg2:#ffffff;
+  --bg3:#f0f2f8;
+  --bg4:#e8ecf5;
+  --bg5:#dde3ef;
+  --text:#0f1628;
+  --text2:#5a6a8a;
+  --text3:#a0aec0;
+  --border:rgba(0,0,0,.07);
+  --border2:rgba(0,0,0,.13);
+  --accent-glow:rgba(59,130,246,.06);
+  --accent-dim:rgba(59,130,246,.1);
+}
+
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:14px;min-height:100vh;display:flex;overflow:hidden;line-height:1.5}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  height:100vh;z-index:10;
+  transition:width .25s ease;
+}
+.logo{
+  padding:18px 16px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:36px;height:36px;flex-shrink:0;
+  background:var(--accent);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.logo-mark::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);
+}
+.logo-mark svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2}
+.logo-text{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.logo-sub{font-size:10px;color:var(--text2);margin-top:1px;font-weight:500}
+
+nav{padding:10px 8px;flex:1;overflow-y:auto}
+.nav-sect{
+  font-size:9px;font-weight:700;color:var(--text3);
+  letter-spacing:.1em;text-transform:uppercase;
+  padding:12px 10px 5px;
+}
+.ni{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:var(--r2);
+  cursor:pointer;color:var(--text2);
+  font-size:13px;font-weight:500;
+  transition:all .12s;margin-bottom:1px;
+  border:none;background:none;width:100%;text-align:left;
+  position:relative;
+}
+.ni:hover{background:var(--bg3);color:var(--text)}
+.ni.active{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,130,246,.2)}
+.ni-icon{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:7px;flex-shrink:0;font-size:15px}
+.ni.active .ni-icon{background:var(--accent-dim)}
+.ni-badge{
+  margin-left:auto;background:var(--rose);color:#fff;
+  padding:2px 6px;border-radius:8px;font-size:10px;font-weight:700;
+}
+
+.sidebar-footer{
+  padding:10px;border-top:1px solid var(--border);
+}
+.user-chip{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:var(--r2);
+  cursor:pointer;transition:background .12s;
+}
+.user-chip:hover{background:var(--bg3)}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:var(--text2);text-transform:capitalize;font-weight:500}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{
+  height:var(--topbar);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  background:var(--bg2);flex-shrink:0;
+}
+.page-title{font-size:15px;font-weight:700;flex:1;letter-spacing:-.01em}
+.tb-btn{
+  padding:6px 13px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);cursor:pointer;font-size:12px;
+  font-family:var(--f);font-weight:500;
+  transition:all .12s;display:flex;align-items:center;gap:6px;
+}
+.tb-btn:hover{background:var(--bg3);color:var(--text)}
+.tb-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tb-btn.primary:hover{background:#2563eb}
+.tb-icon{
+  width:32px;height:32px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .12s;
+}
+.tb-icon:hover{background:var(--bg3);color:var(--text)}
+#content{flex:1;overflow-y:auto;padding:20px}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px}
+.card-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.card-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.card-sub{font-size:11px;color:var(--text2);margin-top:1px}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px 18px;
+  position:relative;overflow:hidden;transition:border-color .15s,transform .15s;
+}
+.stat:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-accent{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:var(--r) var(--r) 0 0;
+}
+.stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.stat-icon-wrap{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex-shrink:0;
+}
+.stat-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-value{font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.stat-delta{font-size:11px;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:4px}
+.delta-up{color:var(--emerald)}
+.delta-dn{color:var(--rose)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{
+  text-align:left;font-size:10px;font-weight:700;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.08em;
+  padding:9px 12px;border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3);color:var(--text)}
+.td-strong{font-weight:600;color:var(--text)!important}
+.mono{font-family:var(--fm);font-size:12px}
+
+/* ── BADGES ── */
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;
+  white-space:nowrap;
+}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+.b-green{background:var(--emerald-dim);color:var(--emerald)}
+.b-red{background:var(--rose-dim);color:var(--rose)}
+.b-amber{background:var(--amber-dim);color:var(--amber)}
+.b-blue{background:var(--accent-dim);color:var(--accent)}
+.b-violet{background:var(--violet-dim);color:var(--violet)}
+.b-gray{background:var(--bg4);color:var(--text2)}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r2);padding:9px 11px;
+  color:var(--text);font-size:13px;font-family:var(--f);
+  outline:none;transition:border-color .12s,box-shadow .12s;width:100%;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(59,130,246,.12);
+}
+select option{background:var(--bg3)}
+textarea{resize:vertical;min-height:80px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:9px 16px;border-radius:var(--r2);border:none;
+  cursor:pointer;font-size:13px;font-family:var(--f);font-weight:600;
+  transition:all .12s;display:inline-flex;align-items:center;gap:7px;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);background:var(--bg4)}
+.btn-danger{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(244,63,94,.2)}
+.btn-danger:hover{background:var(--rose);color:#fff}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* ── MODAL ── */
+.mo{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .18s;
+  backdrop-filter:blur(4px);
+}
+.mo.open{opacity:1;pointer-events:all}
+.mo-box{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:16px;padding:22px;
+  width:500px;max-width:92vw;max-height:88vh;
+  overflow-y:auto;
+  transform:scale(.96) translateY(8px);
+  transition:transform .18s;
+}
+.mo.open .mo-box{transform:scale(1) translateY(0)}
+.mo-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.mo-title{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.close-x{
+  background:var(--bg3);border:none;color:var(--text2);cursor:pointer;
+  width:28px;height:28px;border-radius:6px;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .12s;
+}
+.close-x:hover{background:var(--bg4);color:var(--text)}
+
+/* ── POS ── */
+.pos-wrap{display:grid;grid-template-columns:1fr 360px;gap:14px;height:calc(100vh - var(--topbar) - 40px)}
+.pos-left{display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.pos-right{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden;
+}
+.search-bar{
+  position:relative;
+}
+.search-bar input{padding-left:38px;background:var(--bg2);font-size:14px}
+.search-bar::before{
+  content:'🔍';position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-size:14px;z-index:1;pointer-events:none;
+}
+.meds-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:9px;overflow-y:auto;flex:1;padding-right:2px;
+}
+.med-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:13px;cursor:pointer;
+  transition:all .12s;position:relative;overflow:hidden;
+}
+.med-card:hover{border-color:var(--accent);background:var(--bg3);transform:translateY(-1px)}
+.med-card:active{transform:translateY(0)}
+.med-rx-tag{
+  position:absolute;top:8px;right:8px;
+  font-size:9px;font-weight:700;padding:2px 5px;
+  border-radius:4px;letter-spacing:.03em;
+}
+.med-name{font-weight:700;font-size:13px;margin-bottom:3px;color:var(--text);padding-right:28px;line-height:1.3}
+.med-generic{font-size:10px;color:var(--text3);margin-bottom:10px;font-weight:500}
+.med-foot{display:flex;align-items:center;justify-content:space-between}
+.med-price{font-family:var(--fm);font-weight:700;font-size:14px;color:var(--accent)}
+.med-stock{font-size:10px;font-weight:600}
+
+/* CART */
+.cart-hd{
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.cart-hd-label{font-size:13px;font-weight:700}
+.cart-cnt{
+  background:var(--accent);color:#fff;
+  padding:2px 8px;border-radius:9px;font-size:11px;font-weight:700;
+}
+.cart-body{flex:1;overflow-y:auto;padding:10px}
+.cart-item{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px;background:var(--bg3);
+  border-radius:var(--r2);margin-bottom:7px;
+  border:1px solid var(--border);
+}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.ci-price{font-size:10px;color:var(--text2);font-weight:500;margin-top:1px}
+.qty-ctl{display:flex;align-items:center;gap:5px}
+.qty-btn{
+  width:22px;height:22px;border-radius:5px;
+  border:1px solid var(--border2);background:var(--bg2);
+  color:var(--text2);cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .1s;font-weight:600;
+}
+.qty-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.ci-total{font-family:var(--fm);font-weight:700;font-size:12px;color:var(--text);min-width:64px;text-align:right}
+
+/* CART FOOTER */
+.cart-ft{padding:14px 16px;border-top:1px solid var(--border)}
+.total-rows{margin-bottom:12px}
+.tr{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:5px}
+.tr.grand{
+  font-size:18px;font-weight:800;color:var(--text);
+  border-top:1px solid var(--border);padding-top:10px;margin-top:8px;
+  font-family:var(--fm);
+}
+.pay-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pay-opt{
+  padding:7px 4px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;
+  transition:all .12s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.pay-opt .pi{font-size:16px}
+.pay-opt:hover{border-color:var(--accent);color:var(--accent)}
+.pay-opt.sel{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.checkout-btn{
+  width:100%;padding:12px;font-size:14px;
+  border-radius:var(--r);border:none;cursor:pointer;
+  font-family:var(--f);font-weight:700;
+  background:var(--accent);color:#fff;
+  transition:all .12s;letter-spacing:.01em;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.checkout-btn:hover{background:#2563eb;transform:translateY(-1px)}
+.checkout-btn:active{transform:translateY(0)}
+.checkout-btn:disabled{background:var(--bg4);color:var(--text3);cursor:default;transform:none}
+
+/* ── ALERTS ── */
+.alert-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 14px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:var(--r);
+  margin-bottom:8px;transition:border-color .12s;
+}
+.alert-card:hover{border-color:var(--border2)}
+.alert-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.alert-body{flex:1}
+.alert-type{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.alert-msg{font-size:12px;color:var(--text2);line-height:1.5}
+.alert-time{font-size:10px;color:var(--text3);margin-top:4px}
+
+/* ── MPESA FLOW ── */
+.mpesa-modal .mo-box{width:420px}
+.mpesa-step{display:none}
+.mpesa-step.visible{display:block}
+.mpesa-status{
+  text-align:center;padding:24px 0;
+}
+.mpesa-pulse{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--emerald-dim);border:2px solid var(--emerald);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;font-size:28px;
+  animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.3)}50%{box-shadow:0 0 0 12px rgba(16,185,129,0)}}
+.mpesa-receipt{
+  background:var(--bg3);border:1px solid var(--border2);
+  border-radius:var(--r);padding:14px;text-align:center;margin-top:12px;
+}
+.receipt-code{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--emerald);letter-spacing:.1em}
+
+/* ── CHARTS ── */
+.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:18px}
+.chart-wrap{position:relative;height:200px}
+
+/* ── EXPIRY HEATMAP ── */
+.heatmap-row{display:flex;gap:6px;flex-wrap:wrap;padding:4px 0}
+.hm-item{
+  padding:5px 10px;border-radius:6px;font-size:11px;
+  font-weight:600;cursor:default;
+}
+.hm-expired{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(244,63,94,.2)}
+.hm-soon{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.hm-ok{background:var(--emerald-dim);color:var(--emerald);border:1px solid rgba(16,185,129,.2)}
+
+/* ── STOCK BAR ── */
+.stock-bar-wrap{display:flex;align-items:center;gap:8px}
+.stock-bar-bg{flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.stock-pct{font-size:10px;font-weight:700;min-width:26px;text-align:right;font-family:var(--fm)}
+
+/* ── MPESA STATUS BADGE ── */
+.mpesa-row{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--r2);padding:10px 14px;
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:8px;
+}
+
+/* ── SEARCH ── */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.search-wrap{position:relative}
+.search-wrap input{padding-left:32px;width:220px}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 16px;color:var(--text3)}
+.empty-icon{font-size:38px;margin-bottom:12px;opacity:.4}
+.empty p{font-size:13px}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:7px}
+.toast{
+  padding:11px 16px;border-radius:var(--r);font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:9px;
+  animation:toastIn .3s ease;max-width:300px;
+  border-left:3px solid currentColor;
+}
+.toast.success{background:#052e16;color:var(--emerald)}
+.toast.error{background:#1c0a0a;color:var(--rose)}
+.toast.info{background:#0c1a2e;color:var(--accent)}
+.toast.warn{background:#1c1000;color:var(--amber)}
+@keyframes toastIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── LOGIN ── */
+#login-screen{
+  position:fixed;inset:0;
+  background:var(--bg);z-index:200;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-wrap{
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:20px;padding:36px;width:360px;
+}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-logo .lmark{
+  width:52px;height:52px;background:var(--accent);
+  border-radius:16px;display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin:0 auto 12px;
+}
+.login-logo h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.login-logo p{color:var(--text2);font-size:13px;margin-top:3px}
+
+/* ── REPORT STATS ── */
+.rpt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0}
+
+/* ── MISC ── */
+.page{display:none}
+.page.active{display:block}
+.pos-page{display:none}
+.pos-page.active{display:flex;flex-direction:column}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:4px}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* ── PROGRESS RING ── */
+.prog-ring{display:inline-block;position:relative;width:40px;height:40px}
+.prog-ring svg{transform:rotate(-90deg)}
+.prog-ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:var(--fm)}
+
+/* responsive */
+@media(max-width:1200px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .pos-wrap{grid-template-columns:1fr 320px}
+  .meds-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="lmark">💊</div>
+      <h1>Flex Pharmacy</h1>
+      <p>Point of Sale System</p>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Email Address</label>
+      <input type="email" id="li-email" value="admin@pharmacy.local" placeholder="admin@pharmacy.local"/>
+    </div>
+    <div class="fg" style="margin-bottom:18px">
+      <label>Password</label>
+      <input type="password" id="li-pass" value="Admin@12345" placeholder="••••••••"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px" onclick="doLogin()">Sign In →</button>
+    <p style="text-align:center;color:var(--text3);font-size:11px;margin-top:14px">Flex POS v2.0 · Pharmacy Edition · Kenya</p>
+  </div>
+</div>
+
+<!-- ══ SIDEBAR ══ -->
+<div id="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v10l9 5 9-5V7z"/><line x1="12" y1="22" x2="12" y2="12"/><line x1="3" y1="7" x2="12" y2="12"/><line x1="21" y1="7" x2="12" y2="12"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">Flex POS</div>
+      <div class="logo-sub">Pharmacy · Kenya</div>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-sect">Main</div>
+    <button class="ni active" data-page="dashboard" onclick="goPage('dashboard',this)">
+      <div class="ni-icon">📊</div>Dashboard
+    </button>
+    <button class="ni" data-page="pos" onclick="goPage('pos',this)">
+      <div class="ni-icon">🛒</div>Point of Sale
+    </button>
+    <button class="ni" data-page="sales" onclick="goPage('sales',this)">
+      <div class="ni-icon">🧾</div>Sales History
+    </button>
+
+    <div class="nav-sect">Inventory</div>
+    <button class="ni" data-page="medicines" onclick="goPage('medicines',this)">
+      <div class="ni-icon">💊</div>Medicines
+    </button>
+    <button class="ni" data-page="inventory" onclick="goPage('inventory',this)">
+      <div class="ni-icon">📦</div>Stock
+    </button>
+    <button class="ni" data-page="suppliers" onclick="goPage('suppliers',this)">
+      <div class="ni-icon">🏭</div>Suppliers
+    </button>
+
+    <div class="nav-sect">Patients</div>
+    <button class="ni" data-page="customers" onclick="goPage('customers',this)">
+      <div class="ni-icon">👥</div>Customers
+    </button>
+
+    <div class="nav-sect">Admin</div>
+    <button class="ni" data-page="users" onclick="goPage('users',this)">
+      <div class="ni-icon">👤</div>Staff
+    </button>
+    <button class="ni" data-page="alerts" onclick="goPage('alerts',this)">
+      <div class="ni-icon">🔔</div>Alerts
+      <span class="ni-badge" id="alert-badge" style="display:none">0</span>
+    </button>
+    <button class="ni" data-page="reports" onclick="goPage('reports',this)">
+      <div class="ni-icon">📈</div>Reports
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar" id="u-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="u-name">Admin</div>
+        <div class="user-role" id="u-role">Administrator</div>
+      </div>
+      <span style="color:var(--text3);cursor:pointer;font-size:16px" onclick="logout()" title="Sign out">↩</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+  <div class="topbar">
+    <div class="page-title" id="pg-title">Dashboard</div>
+    <button class="tb-btn" onclick="refreshPage()">↻ Refresh</button>
+    <button class="tb-icon" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <button class="tb-btn primary" id="tb-action" onclick="tbAction()">+ New Sale</button>
+  </div>
+
+  <div id="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--accent)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Active Medicines</div>
+              <div class="stat-value" id="d-meds">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--accent-dim)">💊</div>
+          </div>
+          <div class="stat-delta">in catalogue</div>
+        </div>
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--emerald)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Today's Revenue</div>
+              <div class="stat-value" id="d-rev" style="font-size:18px">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--emerald-dim)">💰</div>
+          </div>
+          <div class="stat-delta"><span id="d-sales-ct">—</span> sales today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--amber)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Low / Out of Stock</div>
+              <div class="stat-value" id="d-low">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--amber-dim)">⚠️</div>
+          </div>
+          <div class="stat-delta">need reorder</div>
+        </div>
+        <div class="stat">
+          <div class="stat-accent" style="background:var(--rose)"></div>
+          <div class="stat-top">
+            <div>
+              <div class="stat-label">Unresolved Alerts</div>
+              <div class="stat-value" id="d-alrt">—</div>
+            </div>
+            <div class="stat-icon-wrap" style="background:var(--rose-dim)">🔔</div>
+          </div>
+          <div class="stat-delta"><span id="d-expiring">—</span> expiring soon</div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="charts-row">
+        <div class="card">
+          <div class="card-hd">
+            <div><div class="card-title">Revenue — Last 7 Days</div><div class="card-sub">Daily completed sales</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="rev-chart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div><div class="card-title">Payment Methods</div><div class="card-sub">Today's breakdown</div></div>
+          </div>
+          <div class="chart-wrap"><canvas id="pay-chart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Recent Sales</div>
+            <button class="tb-btn" style="font-size:11px;padding:4px 10px" onclick="goPage('sales',document.querySelector('[data-page=sales]'))">View all</button>
+          </div>
+          <div id="d-recent"></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">
+            <div class="card-title">Active Alerts</div>
+            <button class="tb-btn" style="font-size:11px;padding:4px 10px" onclick="goPage('alerts',document.querySelector('[data-page=alerts]'))">View all</button>
+          </div>
+          <div id="d-alerts"></div>
+        </div>
+      </div>
+
+      <!-- Expiry heatmap -->
+      <div class="card" style="margin-top:14px">
+        <div class="card-hd">
+          <div><div class="card-title">Stock Expiry Overview</div><div class="card-sub">Batches by expiry window</div></div>
+          <div style="display:flex;gap:10px;font-size:11px;font-weight:600;align-items:center">
+            <span style="color:var(--rose)">🔴 Expired</span>
+            <span style="color:var(--amber)">🟡 ≤30 days</span>
+            <span style="color:var(--emerald)">🟢 OK</span>
+          </div>
+        </div>
+        <div class="heatmap-row" id="expiry-heatmap"><span style="color:var(--text3);font-size:12px">Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- ══ POS ══ -->
+    <div class="page pos-page" id="page-pos">
+      <div class="pos-wrap">
+        <div class="pos-left">
+          <div style="display:flex;gap:9px;align-items:center">
+            <div class="search-bar" style="flex:1">
+              <input type="text" id="med-q" placeholder="Search medicines by name, generic, barcode..." oninput="searchMeds()" autocomplete="off"/>
+            </div>
+            <button class="tb-btn" onclick="openMo('mo-customer')">👤 <span id="cust-label">Walk-in</span></button>
+          </div>
+          <div class="meds-grid" id="meds-grid">
+            <div class="empty" style="grid-column:1/-1"><div class="empty-icon">💊</div><p>Type to search medicines</p></div>
+          </div>
+        </div>
+
+        <div class="pos-right">
+          <div class="cart-hd">
+            <span class="cart-hd-label">🛒 Cart</span>
+            <span class="cart-cnt" id="cart-cnt">0</span>
+          </div>
+          <div class="cart-body" id="cart-body">
+            <div class="empty"><div class="empty-icon">🛒</div><p>Cart is empty</p></div>
+          </div>
+          <div class="cart-ft">
+            <div class="total-rows">
+              <div class="tr"><span>Subtotal</span><span id="c-sub" class="mono">KES 0.00</span></div>
+              <div class="tr"><span>VAT (16%)</span><span id="c-tax" class="mono">KES 0.00</span></div>
+              <div class="tr grand"><span>Total</span><span id="c-total">KES 0.00</span></div>
+            </div>
+            <div class="pay-grid">
+              <div class="pay-opt sel" onclick="selPay('cash',this)"><span class="pi">💵</span>Cash</div>
+              <div class="pay-opt" onclick="selPay('mpesa',this)"><span class="pi">📱</span>M-Pesa</div>
+              <div class="pay-opt" onclick="selPay('card',this)"><span class="pi">💳</span>Card</div>
+            </div>
+            <button class="checkout-btn" id="checkout-btn" disabled onclick="doSale()">
+              Process Sale →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SALES ══ -->
+    <div class="page" id="page-sales">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="sales-q" placeholder="Search receipt..." oninput="filterSales()"/></div>
+        <div style="display:flex;gap:8px">
+          <select id="sales-status-filter" onchange="filterSales()" style="width:130px;padding:7px 10px">
+            <option value="">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="voided">Voided</option>
+          </select>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Receipt</th><th>Date & Time</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+            <tbody id="sales-tb"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MEDICINES ══ -->
+    <div class="page" id="page-medicines">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="med-search" placeholder="Search medicines..." oninput="filterMeds()"/></div>
+        <div style="display:flex;gap:8px">
+          <button class="tb-btn" onclick="syncWHO()">🌍 Sync WHO</button>
+          <button class="tb-btn primary" onclick="openMo('mo-add-med')">+ Add Medicine</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Generic</th><th>Form</th><th>Strength</th><th>Price</th><th>Stock</th><th>Rx</th><th>Status</th></tr></thead>
+            <tbody id="meds-tb"><tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ INVENTORY ══ -->
+    <div class="page" id="page-inventory">
+      <div class="sec-hd">
+        <span style="color:var(--text2);font-size:13px">Stock batches with expiry tracking</span>
+        <button class="tb-btn primary" onclick="openMo('mo-add-stock')">+ Receive Stock</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Medicine</th><th>Batch</th><th>Quantity</th><th>Cost</th><th>Sell Price</th><th>Expiry</th><th>Status</th></tr></thead>
+            <tbody id="inv-tb"><tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SUPPLIERS ══ -->
+    <div class="page" id="page-suppliers">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="sup-q" placeholder="Search suppliers..." oninput="filterSuppliers()"/></div>
+        <button class="tb-btn primary" onclick="openMo('mo-add-supplier')">+ Add Supplier</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Company</th><th>Contact</th><th>Phone</th><th>Email</th><th>Status</th></tr></thead>
+            <tbody id="sup-tb"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CUSTOMERS ══ -->
+    <div class="page" id="page-customers">
+      <div class="sec-hd">
+        <div class="search-wrap"><input type="text" id="cust-q" placeholder="Search by name, phone..." oninput="filterCustomers()"/></div>
+        <button class="tb-btn primary" onclick="openMo('mo-add-customer')">+ Register Patient</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>ID Number</th><th>Loyalty Points</th><th>Status</th></tr></thead>
+            <tbody id="cust-tb"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ STAFF ══ -->
+    <div class="page" id="page-users">
+      <div class="sec-hd">
+        <span style="color:var(--text2);font-size:13px">Manage staff accounts and permissions</span>
+        <button class="tb-btn primary" onclick="openMo('mo-add-user')">+ Add Staff</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Last Login</th><th>Status</th></tr></thead>
+            <tbody id="users-tb"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALERTS ══ -->
+    <div class="page" id="page-alerts">
+      <div class="sec-hd">
+        <div style="display:flex;gap:8px">
+          <button class="tb-btn" id="filter-unresolved" onclick="toggleAlertFilter(false)" style="background:var(--bg3)">Unresolved</button>
+          <button class="tb-btn" id="filter-resolved" onclick="toggleAlertFilter(true)">Resolved</button>
+        </div>
+        <button class="tb-btn primary" onclick="scanAlerts()">🔍 Scan Now</button>
+      </div>
+      <div id="alerts-wrap"><div class="empty"><div class="empty-icon">✅</div><p>No alerts</p></div></div>
+    </div>
+
+    <!-- ══ REPORTS ══ -->
+    <div class="page" id="page-reports">
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-hd"><div class="card-title">Sales Summary</div></div>
+        <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">
+          <div class="fg"><label>From</label><input type="date" id="rpt-from"/></div>
+          <div class="fg"><label>To</label><input type="date" id="rpt-to"/></div>
+          <button class="btn btn-primary" onclick="loadReport()">Generate Report</button>
+        </div>
+        <div id="rpt-result" style="margin-top:16px"></div>
+      </div>
+      <div class="two">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Top Selling Medicines</div></div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Medicine</th><th>Units</th><th>Revenue</th></tr></thead>
+              <tbody id="top-meds-tb"><tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">Generate a report first</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Stock by Medicine</div></div>
+          <div id="stock-summary-list"><div style="color:var(--text3);font-size:13px;padding:16px 0">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- Add Medicine -->
+<div class="mo" id="mo-add-med">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Add Medicine</div><button class="close-x" onclick="closeMo('mo-add-med')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Medicine Name *</label><input id="m-name" placeholder="e.g. Panadol Extra"/></div>
+      <div class="fg"><label>Generic Name</label><input id="m-generic" placeholder="Paracetamol"/></div>
+      <div class="fg"><label>Brand Name</label><input id="m-brand" placeholder="Panadol"/></div>
+      <div class="fg"><label>Dosage Form</label><input id="m-form" placeholder="Tablet, Syrup..."/></div>
+      <div class="fg"><label>Strength</label><input id="m-strength" placeholder="500mg"/></div>
+      <div class="fg"><label>Route</label><input id="m-route" placeholder="Oral, IV..."/></div>
+      <div class="fg"><label>Unit Price (KES) *</label><input type="number" id="m-price" placeholder="0.00" step="0.01"/></div>
+      <div class="fg"><label>Reorder Level</label><input type="number" id="m-reorder" placeholder="10"/></div>
+      <div class="fg"><label>Barcode</label><input id="m-barcode" placeholder="Optional"/></div>
+      <div class="fg"><label>Manufacturer</label><input id="m-mfg" placeholder="Optional"/></div>
+      <div class="fg"><label>Prescription Required</label><select id="m-rx"><option value="false">No — OTC</option><option value="true">Yes — Rx</option></select></div>
+      <div class="fg"><label>Controlled Substance</label><select id="m-ctrl"><option value="false">No</option><option value="true">Yes</option></select></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-med')">Cancel</button><button class="btn btn-primary" onclick="addMedicine()">Add Medicine</button></div>
+  </div>
+</div>
+
+<!-- Receive Stock -->
+<div class="mo" id="mo-add-stock">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Receive Stock</div><button class="close-x" onclick="closeMo('mo-add-stock')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Medicine ID *</label><input type="number" id="s-med" placeholder="Enter medicine ID"/></div>
+      <div class="fg"><label>Batch Number</label><input id="s-batch" placeholder="BATCH001"/></div>
+      <div class="fg"><label>Quantity *</label><input type="number" id="s-qty" placeholder="0"/></div>
+      <div class="fg"><label>Unit Cost (KES) *</label><input type="number" id="s-cost" step="0.01" placeholder="0.00"/></div>
+      <div class="fg"><label>Selling Price (KES) *</label><input type="number" id="s-price" step="0.01" placeholder="0.00"/></div>
+      <div class="fg"><label>Expiry Date</label><input type="date" id="s-exp"/></div>
+      <div class="fg"><label>Supplier ID</label><input type="number" id="s-sup" placeholder="Optional"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-stock')">Cancel</button><button class="btn btn-primary" onclick="addStock()">Receive Stock</button></div>
+  </div>
+</div>
+
+<!-- Add Supplier -->
+<div class="mo" id="mo-add-supplier">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Add Supplier</div><button class="close-x" onclick="closeMo('mo-add-supplier')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Company Name *</label><input id="sup-name" placeholder="Kenya Pharma Ltd"/></div>
+      <div class="fg"><label>Contact Person</label><input id="sup-contact" placeholder="Full name"/></div>
+      <div class="fg"><label>Phone</label><input id="sup-phone" placeholder="0712345678"/></div>
+      <div class="fg"><label>Email</label><input type="email" id="sup-email" placeholder="supplier@example.com"/></div>
+      <div class="fg full"><label>Address</label><textarea id="sup-addr" placeholder="Physical address"></textarea></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-supplier')">Cancel</button><button class="btn btn-primary" onclick="addSupplier()">Add Supplier</button></div>
+  </div>
+</div>
+
+<!-- Register Customer -->
+<div class="mo" id="mo-add-customer">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Register Patient</div><button class="close-x" onclick="closeMo('mo-add-customer')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Full Name *</label><input id="c-name" placeholder="Patient full name"/></div>
+      <div class="fg"><label>Phone</label><input id="c-phone" placeholder="0712345678"/></div>
+      <div class="fg"><label>Email</label><input type="email" id="c-email" placeholder="Optional"/></div>
+      <div class="fg"><label>National ID</label><input id="c-id" placeholder="ID Number"/></div>
+      <div class="fg"><label>Insurance No.</label><input id="c-ins" placeholder="Optional"/></div>
+      <div class="fg"><label>Date of Birth</label><input type="date" id="c-dob"/></div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-customer')">Cancel</button><button class="btn btn-primary" onclick="addCustomer()">Register</button></div>
+  </div>
+</div>
+
+<!-- POS Customer Select -->
+<div class="mo" id="mo-customer">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Select Customer</div><button class="close-x" onclick="closeMo('mo-customer')">✕</button></div>
+    <input type="text" placeholder="Search by name or phone..." id="pos-cust-q" oninput="searchPosCust()" style="margin-bottom:12px"/>
+    <div id="pos-cust-res" style="min-height:60px"><div style="color:var(--text3);font-size:13px;text-align:center;padding:16px">Type to search patients</div></div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="clearCustomer()">Walk-in (No Patient)</button></div>
+  </div>
+</div>
+
+<!-- Add Staff -->
+<div class="mo" id="mo-add-user">
+  <div class="mo-box">
+    <div class="mo-hd"><div class="mo-title">Add Staff Account</div><button class="close-x" onclick="closeMo('mo-add-user')">✕</button></div>
+    <div class="fgrid">
+      <div class="fg full"><label>Full Name *</label><input id="u-fname" placeholder="Staff full name"/></div>
+      <div class="fg"><label>Email *</label><input type="email" id="u-email" placeholder="staff@pharmacy.com"/></div>
+      <div class="fg"><label>Password *</label><input type="password" id="u-pass" placeholder="Min 8 characters"/></div>
+      <div class="fg"><label>Phone</label><input id="u-phone" placeholder="0712345678"/></div>
+      <div class="fg full"><label>Role *</label>
+        <select id="u-role">
+          <option value="cashier">Cashier</option>
+          <option value="pharmacist">Pharmacist</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row"><button class="btn btn-ghost" onclick="closeMo('mo-add-user')">Cancel</button><button class="btn btn-primary" onclick="addUser()">Create Account</button></div>
+  </div>
+</div>
+
+<!-- M-Pesa Payment Modal -->
+<div class="mo mpesa-modal" id="mo-mpesa">
+  <div class="mo-box">
+    <div class="mo-hd">
+      <div class="mo-title">📱 M-Pesa Payment</div>
+      <button class="close-x" onclick="closeMo('mo-mpesa')">✕</button>
+    </div>
+
+    <!-- Step 1: Enter phone -->
+    <div class="mpesa-step visible" id="mp-step1">
+      <div style="background:var(--emerald-dim);border:1px solid rgba(16,185,129,.2);border-radius:var(--r);padding:14px;margin-bottom:16px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Amount to Pay</div>
+        <div style="font-family:var(--fm);font-size:26px;font-weight:700;color:var(--emerald)" id="mp-amount">KES 0.00</div>
+      </div>
+      <div class="fg" style="margin-bottom:16px">
+        <label>Customer M-Pesa Phone Number</label>
+        <input id="mp-phone" placeholder="07XXXXXXXX or 2547XXXXXXXX" type="tel"/>
+        <div style="font-size:11px;color:var(--text2);margin-top:4px">Customer will receive a prompt on their phone to enter PIN</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="closeMo('mo-mpesa')">Cancel</button>
+        <button class="btn btn-primary" onclick="initMpesa()">Send STK Push →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Waiting -->
+    <div class="mpesa-step" id="mp-step2">
+      <div class="mpesa-status">
+        <div class="mpesa-pulse">📱</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px">Waiting for Payment</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px" id="mp-wait-msg">
+          Payment prompt sent to <strong id="mp-sent-to">customer</strong>.<br/>
+          Ask them to enter their M-Pesa PIN.
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--amber);animation:pulse 1s infinite"></div>
+          <span style="font-size:12px;color:var(--text2)">Checking payment status...</span>
+        </div>
+        <div style="background:var(--bg3);border-radius:var(--r2);padding:10px 14px;font-size:12px;color:var(--text2)">
+          ⏱ Customer has <span id="mp-countdown" style="font-weight:700;color:var(--amber)">60</span>s to respond
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-danger" onclick="cancelMpesa()">Cancel Payment</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div class="mpesa-step" id="mp-step3">
+      <div class="mpesa-status">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--emerald-dim);border:2px solid var(--emerald);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">✅</div>
+        <div style="font-size:18px;font-weight:800;color:var(--emerald);margin-bottom:4px">Payment Received!</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px">Transaction completed successfully</div>
+        <div class="mpesa-receipt">
+          <div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">M-Pesa Receipt</div>
+          <div class="receipt-code" id="mp-receipt-code">—</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:6px" id="mp-receipt-amt">KES 0.00</div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="completeMpesaSale()">Complete Sale →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Failed -->
+    <div class="mpesa-step" id="mp-step4">
+      <div class="mpesa-status">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--rose-dim);border:2px solid var(--rose);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">❌</div>
+        <div style="font-size:16px;font-weight:700;color:var(--rose);margin-bottom:6px">Payment Failed</div>
+        <div style="font-size:13px;color:var(--text2)" id="mp-fail-reason">Customer cancelled or entered wrong PIN.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="resetMpesa()">Try Again</button>
+        <button class="btn btn-ghost" onclick="closeMo('mo-mpesa')">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════
+const API = 'http://localhost:8000';
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let token = localStorage.getItem('pos_token') || '';
+let me = JSON.parse(localStorage.getItem('pos_me') || 'null');
+let cart = [];
+let payMethod = 'cash';
+let custId = null, custName = null;
+let allMeds = [], allSales = [], allCustomers = [], allSuppliers = [];
+let curPage = 'dashboard';
+let alertsResolved = false;
+let mpesaCheckoutId = null, mpesaPollTimer = null, mpesaCountdown = 60;
+
+// ══════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════
+async function req(method, path, body) {
+  const opts = {
+    method,
+    headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`}
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts).catch(() => { throw new Error('Cannot reach server at ' + API); });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = d.message || d.detail || `Error ${r.status}`;
+    throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+  }
+  return d;
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type='info', ms=4000) {
+  const w = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const ic = {success:'✅',error:'❌',info:'ℹ️',warn:'⚠️'};
+  t.innerHTML = `<span>${ic[type]||'ℹ️'}</span><span>${msg}</span>`;
+  w.appendChild(t);
+  setTimeout(() => t.style.opacity='0', ms - 400);
+  setTimeout(() => t.remove(), ms);
+}
+
+// ══════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('pos_theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+(function(){
+  const saved = localStorage.getItem('pos_theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    document.getElementById('theme-btn').textContent = saved === 'dark' ? '🌙' : '☀️';
+  }
+})();
+
+// ══════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════
+async function doLogin() {
+  const email = document.getElementById('li-email').value.trim();
+  const pass = document.getElementById('li-pass').value;
+  if (!email || !pass) { toast('Enter email and password', 'error'); return; }
+  try {
+    const d = await req('POST', '/auth/login', {email, password: pass});
+    token = d.access_token;
+    localStorage.setItem('pos_token', token);
+    me = await req('GET', '/auth/me');
+    localStorage.setItem('pos_me', JSON.stringify(me));
+    initUI();
+    toast(`Welcome back, ${me.full_name}! 👋`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function initUI() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('u-avatar').textContent = (me.full_name || 'A')[0].toUpperCase();
+  document.getElementById('u-name').textContent = me.full_name;
+  document.getElementById('u-role').textContent = me.role;
+  loadDashboard();
+  // Periodically check alert count
+  setInterval(updateAlertBadge, 60000);
+}
+
+function logout() {
+  token = ''; me = null;
+  localStorage.removeItem('pos_token');
+  localStorage.removeItem('pos_me');
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+if (token && me) initUI();
+
+// ══════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════
+const pages = {
+  dashboard:{ title:'Dashboard',      action:'+ New Sale',        load: loadDashboard },
+  pos:      { title:'Point of Sale',  action:'🗑 Clear Cart',     load: initPOS },
+  sales:    { title:'Sales History',  action:'+ New Sale',        load: loadSales },
+  medicines:{ title:'Medicines',      action:'+ Add Medicine',    load: loadMedicines },
+  inventory:{ title:'Stock',          action:'+ Receive Stock',   load: loadInventory },
+  suppliers:{ title:'Suppliers',      action:'+ Add Supplier',    load: loadSuppliers },
+  customers:{ title:'Customers',      action:'+ Register Patient',load: loadCustomers },
+  users:    { title:'Staff Accounts', action:'+ Add Staff',       load: loadUsers },
+  alerts:   { title:'Alerts',         action:'🔍 Scan Now',       load: loadAlerts },
+  reports:  { title:'Reports',        action:'📊 Generate',       load: initReports },
+};
+
+function goPage(pg, btn) {
+  document.querySelectorAll('.page,.pos-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pg)?.classList.add('active');
+  if (btn) btn.classList.add('active');
+  curPage = pg;
+  const cfg = pages[pg];
+  if (cfg) {
+    document.getElementById('pg-title').textContent = cfg.title;
+    document.getElementById('tb-action').textContent = cfg.action;
+    cfg.load();
+  }
+}
+
+function refreshPage() { pages[curPage]?.load(); toast('Refreshed', 'info', 1500); }
+
+function tbAction() {
+  const map = {
+    pos: () => { cart=[]; renderCart(); toast('Cart cleared', 'info', 1500); },
+    medicines: () => openMo('mo-add-med'),
+    inventory: () => openMo('mo-add-stock'),
+    suppliers: () => openMo('mo-add-supplier'),
+    customers: () => openMo('mo-add-customer'),
+    users:     () => openMo('mo-add-user'),
+    alerts:    () => scanAlerts(),
+    dashboard: () => goPage('pos', document.querySelector('[data-page=pos]')),
+    sales:     () => goPage('pos', document.querySelector('[data-page=pos]')),
+    reports:   () => loadReport(),
+  };
+  map[curPage]?.();
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+let revChart, payChart;
+async function loadDashboard() {
+  try {
+    const d = await req('GET', '/reports/dashboard');
+    document.getElementById('d-meds').textContent = d.active_medicines;
+    document.getElementById('d-rev').textContent = 'KES ' + Number(d.todays_revenue).toLocaleString();
+    document.getElementById('d-sales-ct').textContent = d.todays_sales_count;
+    document.getElementById('d-low').textContent = d.low_stock_count;
+    document.getElementById('d-alrt').textContent = d.unresolved_alerts;
+    document.getElementById('d-expiring').textContent = d.expiring_soon_count;
+    updateAlertBadge(d.unresolved_alerts);
+  } catch(e) { toast(e.message, 'error'); }
+
+  // Charts
+  buildRevenueChart();
+  buildPaymentChart();
+
+  // Recent sales
+  try {
+    const sales = await req('GET', '/sales?limit=6');
+    const el = document.getElementById('d-recent');
+    if (!sales.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🧾</div><p>No sales yet today</p></div>'; }
+    else el.innerHTML = '<div class="tbl-wrap"><table><thead><tr><th>Receipt</th><th>Total</th><th>Method</th><th>Status</th></tr></thead><tbody>' +
+      sales.map(s => `<tr>
+        <td class="mono td-strong">${s.receipt_number}</td>
+        <td class="td-strong">KES ${Number(s.total_amount).toLocaleString()}</td>
+        <td>${payBadge(s.payment_method)}</td>
+        <td>${statusBadge(s.status)}</td>
+      </tr>`).join('') + '</tbody></table></div>';
+  } catch(e){}
+
+  // Alerts
+  try {
+    const alerts = await req('GET', '/alerts?is_resolved=false');
+    const el = document.getElementById('d-alerts');
+    if (!alerts.length) el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>No active alerts</p></div>';
+    else el.innerHTML = alerts.slice(0,5).map(a => alertCard(a, false)).join('');
+  } catch(e){}
+
+  // Expiry heatmap
+  buildExpiryHeatmap();
+}
+
+async function buildRevenueChart() {
+  const ctx = document.getElementById('rev-chart');
+  if (!ctx) return;
+  if (revChart) revChart.destroy();
+
+  // Build 7-day labels
+  const labels = [], datasets = [];
+  const now = new Date();
+  for (let i=6; i>=0; i--) {
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('en-KE',{weekday:'short'}));
+  }
+  // Try to get real data, fallback to zeros
+  let values = new Array(7).fill(0);
+  try {
+    const to = new Date(); to.setHours(23,59,59);
+    const from = new Date(); from.setDate(from.getDate()-6); from.setHours(0,0,0);
+    const d = await req('GET', `/reports/sales-summary?from_date=${from.toISOString()}&to_date=${to.toISOString()}`);
+    // We only have total — distribute evenly as placeholder
+    const perDay = Number(d.total_revenue) / 7;
+    values = new Array(7).fill(Math.round(perDay));
+  } catch(e){}
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  revChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Revenue (KES)',
+        data: values,
+        fill: true,
+        tension: 0.4,
+        borderColor:'#3b82f6',
+        backgroundColor:'rgba(59,130,246,0.08)',
+        pointBackgroundColor:'#3b82f6',
+        pointRadius:4,
+        borderWidth:2,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'KES '+v.raw.toLocaleString()}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8b9cc8',font:{family:'Outfit',size:11}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8b9cc8',font:{family:'Outfit',size:11},callback:v=>'KES '+v.toLocaleString()}}
+      }
+    }
+  });
+}
+
+async function buildPaymentChart() {
+  const ctx = document.getElementById('pay-chart');
+  if (!ctx) return;
+  if (payChart) payChart.destroy();
+  // Try to get breakdown, fallback to placeholder
+  let cash=1, mpesa=1, card=0;
+  try {
+    const sales = await req('GET', '/sales?limit=200');
+    const today = new Date().toDateString();
+    sales.filter(s=>new Date(s.sold_at).toDateString()===today && s.status==='completed')
+      .forEach(s=>{ if(s.payment_method==='cash') cash++; else if(s.payment_method==='mpesa') mpesa++; else card++; });
+  } catch(e){}
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  payChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{
+      labels:['Cash','M-Pesa','Card'],
+      datasets:[{data:[cash,mpesa,card],backgroundColor:['#10b981','#3b82f6','#8b5cf6'],borderWidth:0,hoverOffset:4}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      cutout:'72%',
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#8b9cc8',font:{family:'Outfit',size:11},padding:12,usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{callbacks:{label:v=>`${v.label}: ${v.raw} sales`}}
+      }
+    }
+  });
+}
+
+async function buildExpiryHeatmap() {
+  const el = document.getElementById('expiry-heatmap');
+  if (!el) return;
+  try {
+    const inv = await req('GET', '/inventory?limit=500');
+    if (!inv.length) { el.innerHTML = '<span style="color:var(--text3);font-size:12px">No inventory data</span>'; return; }
+    const now = new Date();
+    const soon = new Date(); soon.setDate(soon.getDate()+30);
+    el.innerHTML = inv.filter(i=>i.expires_at).map(i => {
+      const exp = new Date(i.expires_at);
+      const cls = exp < now ? 'hm-expired' : exp < soon ? 'hm-soon' : 'hm-ok';
+      const label = exp < now ? '⚠' : exp < soon ? '⏰' : '✓';
+      return `<div class="hm-item ${cls}" title="Batch ${i.batch_number||'?'} · Qty ${i.quantity} · Exp ${exp.toLocaleDateString()}">${label} Med #${i.medicine_id}</div>`;
+    }).slice(0,30).join('') || '<span style="color:var(--text3);font-size:12px">No expiry data</span>';
+  } catch(e) { el.innerHTML = '<span style="color:var(--text3);font-size:12px">Could not load</span>'; }
+}
+
+function updateAlertBadge(count) {
+  const b = document.getElementById('alert-badge');
+  if (count === undefined) req('GET','/alerts?is_resolved=false').then(a=>updateAlertBadge(a.length)).catch(()=>{});
+  else { b.textContent = count; b.style.display = count > 0 ? 'inline-flex' : 'none'; }
+}
+
+// ══════════════════════════════════════════════
+// POS
+// ══════════════════════════════════════════════
+function initPOS() {
+  document.getElementById('med-q').value = '';
+  document.getElementById('meds-grid').innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">💊</div><p>Search for medicines above</p></div>';
+}
+
+async function searchMeds() {
+  const q = document.getElementById('med-q').value.trim();
+  const grid = document.getElementById('meds-grid');
+  if (!q) { initPOS(); return; }
+  try {
+    const meds = await req('GET', `/medicines?q=${encodeURIComponent(q)}&limit=15`);
+    if (!meds.length) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🔍</div><p>No medicines found for "' + q + '"</p></div>';
+      return;
+    }
+    // MedicineSearchOut fields: id, name, generic_name, dosage_form, strength,
+    // unit_price, requires_prescription — no stock_qty (that lives on Inventory).
+    // We stringify name safely to avoid quote-breaking the onclick attribute.
+    grid.innerHTML = meds.map(m => {
+      const price = Number(m.unit_price);
+      const safeName = m.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const rxTag = m.requires_prescription
+        ? '<div class="med-rx-tag" style="background:var(--amber-dim);color:var(--amber)">Rx</div>'
+        : '<div class="med-rx-tag" style="background:var(--emerald-dim);color:var(--emerald)">OTC</div>';
+      return `
+      <div class="med-card" onclick="addCart(${m.id},'${safeName}',${price},${m.requires_prescription})">
+        ${rxTag}
+        <div class="med-name">${m.name}</div>
+        <div class="med-generic">${m.generic_name || ''}${m.strength ? ' · ' + m.strength : ''}</div>
+        <div class="med-foot">
+          <div class="med-price">KES ${price.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text3)">${m.dosage_form || ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function addCart(id, name, price, rx) {
+  const ex = cart.find(i=>i.id===id);
+  if (ex) ex.qty++;
+  else cart.push({id, name, price:Number(price), qty:1, rx});
+  renderCart();
+  toast(name + ' added to cart', 'success', 1200);
+}
+
+function renderCart() {
+  const el = document.getElementById('cart-body');
+  const cnt = cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cart-cnt').textContent = cnt;
+  document.getElementById('checkout-btn').disabled = !cart.length;
+  if (!cart.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><p>Cart is empty</p></div>'; updateTotals(); return; }
+  el.innerHTML = cart.map((item,i) => `
+    <div class="cart-item">
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-price">KES ${item.price.toLocaleString()} × ${item.qty}</div>
+      </div>
+      <div class="qty-ctl">
+        <button class="qty-btn" onclick="chgQty(${i},-1)">−</button>
+        <span style="font-size:13px;font-weight:700;min-width:18px;text-align:center">${item.qty}</span>
+        <button class="qty-btn" onclick="chgQty(${i},1)">+</button>
+      </div>
+      <div class="ci-total">KES ${(item.price*item.qty).toLocaleString()}</div>
+    </div>`).join('');
+  updateTotals();
+}
+
+function chgQty(i, d) { cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1); renderCart(); }
+
+function updateTotals() {
+  const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const tax = sub * 0.16;
+  const total = sub + tax;
+  document.getElementById('c-sub').textContent = 'KES ' + sub.toFixed(2);
+  document.getElementById('c-tax').textContent = 'KES ' + tax.toFixed(2);
+  document.getElementById('c-total').textContent = 'KES ' + total.toFixed(2);
+}
+
+function selPay(m, btn) {
+  payMethod = m;
+  document.querySelectorAll('.pay-opt').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+async function doSale() {
+  if (!cart.length) { toast('Cart is empty','error'); return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0)*1.16;
+
+  if (payMethod === 'mpesa') {
+    // Open M-Pesa flow
+    document.getElementById('mp-amount').textContent = 'KES ' + total.toFixed(2);
+    if (custName) document.getElementById('mp-phone').value = '';
+    openMo('mo-mpesa');
+    return;
+  }
+
+  await submitSale(payMethod, total, null);
+}
+
+async function submitSale(method, total, mpesaReceipt) {
+  const payload = {
+    items:          cart.map(i => ({medicine_id: i.id, quantity: i.qty, discount_pct: 0})),
+    payment_method: method,
+    amount_paid:    parseFloat(total.toFixed(2)),
+    customer_id:    custId || null,
+    mpesa_receipt:  mpesaReceipt || null,
+  };
+  try {
+    const sale = await req('POST', '/sales', payload);
+    toast(`✅ Sale ${sale.receipt_number} — KES ${Number(sale.total_amount).toLocaleString()}`, 'success', 6000);
+    cart = []; renderCart();
+    custId = null; custName = null;
+    document.getElementById('cust-label').textContent = 'Walk-in';
+    return true;  // FIX 6: signal success to completeMpesaSale()
+  } catch(e) {
+    toast(e.message, 'error', 7000);
+    return false; // FIX 6: signal failure — caller decides what to do
+  }
+}
+
+// ══════════════════════════════════════════════
+// M-PESA FLOW
+// ══════════════════════════════════════════════
+function resetMpesa() {
+  ['mp-step1','mp-step2','mp-step3','mp-step4'].forEach(s=>document.getElementById(s).classList.remove('visible'));
+  document.getElementById('mp-step1').classList.add('visible');
+  if (mpesaPollTimer) clearInterval(mpesaPollTimer);
+  mpesaCheckoutId = null; mpesaCountdown = 60;
+}
+
+async function initMpesa() {
+  const phone = document.getElementById('mp-phone').value.trim();
+  if (!phone) { toast('Enter customer phone number', 'error'); return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0)*1.16;
+  const saleId = 0; // Will be created after payment confirmed
+
+  // Show waiting step
+  document.getElementById('mp-step1').classList.remove('visible');
+  document.getElementById('mp-step2').classList.add('visible');
+  document.getElementById('mp-sent-to').textContent = phone;
+
+  // Countdown
+  mpesaCountdown = 60;
+  const cdEl = document.getElementById('mp-countdown');
+  const cdTimer = setInterval(() => {
+    mpesaCountdown--;
+    cdEl.textContent = mpesaCountdown;
+    if (mpesaCountdown <= 0) { clearInterval(cdTimer); mpesaTimeout(); }
+  }, 1000);
+
+  try {
+    // In real integration, you'd call /payments/mpesa/stk-push here
+    // For now simulate with a mock checkout ID
+    // const r = await req('POST', '/payments/mpesa/stk-push', { sale_id: saleId, phone_number: phone });
+    // mpesaCheckoutId = r.checkout_request_id;
+    // pollMpesaStatus(mpesaCheckoutId, cdTimer, total);
+
+    // DEMO MODE: simulate success after 4 seconds
+    setTimeout(() => {
+      clearInterval(cdTimer);
+      const fakeReceipt = 'QJ' + Math.random().toString(36).substr(2,8).toUpperCase();
+      document.getElementById('mp-step2').classList.remove('visible');
+      document.getElementById('mp-step3').classList.add('visible');
+      document.getElementById('mp-receipt-code').textContent = fakeReceipt;
+      document.getElementById('mp-receipt-amt').textContent = 'KES ' + total.toFixed(2);
+      mpesaCheckoutId = fakeReceipt;
+    }, 4000);
+
+  } catch(e) {
+    clearInterval(cdTimer);
+    document.getElementById('mp-step2').classList.remove('visible');
+    document.getElementById('mp-step4').classList.add('visible');
+    document.getElementById('mp-fail-reason').textContent = e.message;
+  }
+}
+
+function pollMpesaStatus(checkoutId, cdTimer, total) {
+  mpesaPollTimer = setInterval(async () => {
+    try {
+      const r = await req('GET', `/payments/mpesa/${checkoutId}/status`);
+      if (r.status === 'SUCCESS') {
+        clearInterval(mpesaPollTimer); clearInterval(cdTimer);
+        document.getElementById('mp-step2').classList.remove('visible');
+        document.getElementById('mp-step3').classList.add('visible');
+        document.getElementById('mp-receipt-code').textContent = r.mpesa_receipt || '—';
+        document.getElementById('mp-receipt-amt').textContent = 'KES ' + total.toFixed(2);
+        mpesaCheckoutId = r.mpesa_receipt;
+      } else if (r.status === 'FAILED') {
+        clearInterval(mpesaPollTimer); clearInterval(cdTimer);
+        document.getElementById('mp-step2').classList.remove('visible');
+        document.getElementById('mp-step4').classList.add('visible');
+        document.getElementById('mp-fail-reason').textContent = r.result_desc || 'Payment failed';
+      }
+    } catch(e){}
+  }, 3000);
+}
+
+function mpesaTimeout() {
+  document.getElementById('mp-step2').classList.remove('visible');
+  document.getElementById('mp-step4').classList.add('visible');
+  document.getElementById('mp-fail-reason').textContent = 'Payment timed out — customer did not respond in 60 seconds.';
+}
+
+function cancelMpesa() { if(mpesaPollTimer) clearInterval(mpesaPollTimer); resetMpesa(); closeMo('mo-mpesa'); }
+
+async function completeMpesaSale() {
+  // FIX 6: close modal AFTER submitSale() resolves, not before.
+  // Closing first then calling submitSale() meant: if the user hit "Complete Sale"
+  // and the POST failed, the modal was already gone and the cart was never cleared
+  // — leaving the POS in a broken half-submitted state.
+  // Also snapshot the cart total NOW before resetMpesa() clears mpesaCheckoutId.
+  const total    = cart.reduce((s,i) => s + i.price * i.qty, 0) * 1.16;
+  const receipt  = mpesaCheckoutId; // snapshot before reset
+  const success  = await submitSale('mpesa', total, receipt);
+  // Only close and reset if the sale actually posted (submitSale returns true on success)
+  if (success) {
+    closeMo('mo-mpesa');
+    resetMpesa();
+  }
+  // If submitSale failed, the modal stays open so the cashier can see the error
+  // and retry without losing the confirmed M-Pesa receipt.
+}
+
+// ══════════════════════════════════════════════
+// SALES
+// ══════════════════════════════════════════════
+async function loadSales() {
+  try {
+    allSales = await req('GET', '/sales?limit=100');
+    renderSales(allSales);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderSales(data) {
+  const tb = document.getElementById('sales-tb');
+  const status = document.getElementById('sales-status-filter').value;
+  const filtered = data.filter(s => !status || s.status === status);
+  if (!filtered.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No sales found</td></tr>'; return; }
+  tb.innerHTML = filtered.map(s => `<tr>
+    <td class="mono td-strong">${s.receipt_number}</td>
+    <td>${new Date(s.sold_at).toLocaleString('en-KE')}</td>
+    <td>${s.customer_id ? '👤 #'+s.customer_id : '<span style="color:var(--text3)">Walk-in</span>'}</td>
+    <td>${s.items?.length||0} item${(s.items?.length||0)===1?'':'s'}</td>
+    <td class="td-strong mono">KES ${Number(s.total_amount).toLocaleString()}</td>
+    <td>${payBadge(s.payment_method)}</td>
+    <td>${statusBadge(s.status)}</td>
+  </tr>`).join('');
+}
+
+function filterSales() {
+  // FIX 7: previously filterSales() filtered by receipt text then passed the
+  // result to renderSales(), which applied the status filter AGAIN on the already-
+  // filtered array. If you typed a receipt AND picked a status, one filter would
+  // reset the other. Now both filters are applied together in one place.
+  const q      = document.getElementById('sales-q').value.toLowerCase().trim();
+  const status = document.getElementById('sales-status-filter').value;
+
+  const filtered = allSales.filter(s => {
+    const matchText   = !q      || s.receipt_number.toLowerCase().includes(q);
+    const matchStatus = !status || s.status === status;
+    return matchText && matchStatus;
+  });
+
+  const tb = document.getElementById('sales-tb');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No sales match your search</td></tr>';
+    return;
+  }
+  tb.innerHTML = filtered.map(s => `<tr>
+    <td class="mono td-strong">${s.receipt_number}</td>
+    <td>${new Date(s.sold_at).toLocaleString('en-KE')}</td>
+    <td>${s.customer_id ? '👤 #'+s.customer_id : '<span style="color:var(--text3)">Walk-in</span>'}</td>
+    <td>${s.items?.length||0} item${(s.items?.length||0)===1?'':'s'}</td>
+    <td class="td-strong mono">KES ${Number(s.total_amount).toLocaleString()}</td>
+    <td>${payBadge(s.payment_method)}</td>
+    <td>${statusBadge(s.status)}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// MEDICINES
+// ══════════════════════════════════════════════
+async function loadMedicines() {
+  try {
+    allMeds = await req('GET', '/medicines?limit=300');
+    renderMeds(allMeds);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function renderMeds(data) {
+  const tb = document.getElementById('meds-tb');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">No medicines. Try "Sync WHO" or add manually.</td></tr>'; return; }
+  // MedicineSearchOut: id, name, generic_name, dosage_form, strength,
+  // unit_price, requires_prescription — no stock_qty field.
+  tb.innerHTML = data.map(m => `<tr>
+    <td class="td-strong">${m.name}</td>
+    <td>${m.generic_name||'—'}</td>
+    <td>${m.dosage_form||'—'}</td>
+    <td><span class="mono" style="font-size:12px">${m.strength||'—'}</span></td>
+    <td class="td-strong mono">KES ${Number(m.unit_price).toLocaleString()}</td>
+    <td><span class="badge b-gray" style="font-size:10px">See Stock tab</span></td>
+    <td>${m.requires_prescription?'<span class="badge b-amber">Rx</span>':'<span class="badge b-green">OTC</span>'}</td>
+    <td>—</td>
+  </tr>`).join('');
+}
+
+function filterMeds() {
+  const q = document.getElementById('med-search').value.toLowerCase();
+  renderMeds(allMeds.filter(m => m.name.toLowerCase().includes(q)||(m.generic_name||'').toLowerCase().includes(q)));
+}
+
+async function addMedicine() {
+  const name  = document.getElementById('m-name').value.trim();
+  const price = parseFloat(document.getElementById('m-price').value);
+
+  // FIX 5: validate before building payload so we never silently send price=0.
+  // The backend schema accepts ge=0.00 so 0 would pass schema validation but
+  // create a free medicine — catch it here with a clear message instead.
+  if (!name)           { toast('Medicine name is required', 'error'); return; }
+  if (!price || price <= 0) { toast('Unit price must be greater than KES 0', 'error'); return; }
+
+  const p = {
+    name,
+    generic_name:          document.getElementById('m-generic').value.trim()  || null,
+    brand_name:            document.getElementById('m-brand').value.trim()    || null,
+    dosage_form:           document.getElementById('m-form').value.trim()     || null,
+    strength:              document.getElementById('m-strength').value.trim() || null,
+    route:                 document.getElementById('m-route').value.trim()    || null,
+    unit_price:            price,
+    reorder_level:         parseInt(document.getElementById('m-reorder').value) || 10,
+    barcode:               document.getElementById('m-barcode').value.trim()  || null,
+    manufacturer:          document.getElementById('m-mfg').value.trim()      || null,
+    requires_prescription: document.getElementById('m-rx').value === 'true',
+    is_controlled:         document.getElementById('m-ctrl').value === 'true',
+  };
+  try {
+    await req('POST', '/medicines', p);
+    toast('Medicine added successfully', 'success');
+    closeMo('mo-add-med');
+    // Clear form for next entry
+    ['m-name','m-generic','m-brand','m-form','m-strength','m-route',
+     'm-price','m-reorder','m-barcode','m-mfg'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    loadMedicines();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function syncWHO() {
+  toast('Syncing WHO Essential Medicines List...','info',8000);
+  try {
+    const r = await req('POST', '/medicines/sync/who-eml?enrich_openfda=false');
+    toast(`WHO Sync: ${r.imported} imported, ${r.skipped} skipped`,'success',6000);
+    loadMedicines();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// INVENTORY
+// ══════════════════════════════════════════════
+async function loadInventory() {
+  try {
+    const data = await req('GET', '/inventory?limit=300');
+    const tb = document.getElementById('inv-tb');
+    if (!data.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No stock batches yet</td></tr>'; return; }
+    const now = new Date();
+    const soon = new Date(); soon.setDate(soon.getDate()+30);
+    tb.innerHTML = data.map(i => {
+      const exp = i.expires_at ? new Date(i.expires_at) : null;
+      const expired = exp && exp < now;
+      const expiringSoon = exp && !expired && exp < soon;
+      let expBadge = exp ? `<span class="badge ${expired?'b-red':expiringSoon?'b-amber':'b-green'}">${exp.toLocaleDateString('en-KE')}</span>` : '—';
+      let qtyColor = i.quantity < 5 ? 'var(--rose)' : i.quantity < 20 ? 'var(--amber)' : 'var(--emerald)';
+      return `<tr>
+        <td class="td-strong">Med #${i.medicine_id}</td>
+        <td class="mono">${i.batch_number||'—'}</td>
+        <td><span style="font-weight:700;color:${qtyColor};font-family:var(--fm)">${i.quantity}</span></td>
+        <td class="mono">KES ${Number(i.unit_cost).toLocaleString()}</td>
+        <td class="mono td-strong">KES ${Number(i.selling_price).toLocaleString()}</td>
+        <td>${expBadge}</td>
+        <td>${expired?'<span class="badge b-red">Expired</span>':expiringSoon?'<span class="badge b-amber">Expiring Soon</span>':'<span class="badge b-green">OK</span>'}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function addStock() {
+  const exp = document.getElementById('s-exp').value;
+  const p = {
+    medicine_id: parseInt(document.getElementById('s-med').value),
+    batch_number: document.getElementById('s-batch').value||null,
+    quantity: parseInt(document.getElementById('s-qty').value),
+    unit_cost: parseFloat(document.getElementById('s-cost').value),
+    selling_price: parseFloat(document.getElementById('s-price').value),
+    expires_at: exp ? new Date(exp).toISOString() : null,
+    supplier_id: parseInt(document.getElementById('s-sup').value)||null,
+  };
+  if (!p.medicine_id||!p.quantity||!p.unit_cost||!p.selling_price) { toast('Fill in required fields','error'); return; }
+  try {
+    await req('POST', '/inventory', p);
+    toast('Stock received','success'); closeMo('mo-add-stock'); loadInventory();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// SUPPLIERS
+// ══════════════════════════════════════════════
+async function loadSuppliers() {
+  try {
+    allSuppliers = await req('GET', '/suppliers');
+    renderSuppliers(allSuppliers);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderSuppliers(data) {
+  const tb = document.getElementById('sup-tb');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">No suppliers yet</td></tr>'; return; }
+  tb.innerHTML = data.map(s=>`<tr>
+    <td class="td-strong">${s.name}</td>
+    <td>${s.contact_name||'—'}</td>
+    <td class="mono">${s.phone||'—'}</td>
+    <td>${s.email||'—'}</td>
+    <td>${s.is_active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+  </tr>`).join('');
+}
+
+function filterSuppliers() {
+  const q = document.getElementById('sup-q').value.toLowerCase();
+  renderSuppliers(allSuppliers.filter(s=>s.name.toLowerCase().includes(q)));
+}
+
+async function addSupplier() {
+  const emailRaw = document.getElementById('sup-email').value.trim();
+  const p = {
+    name:         document.getElementById('sup-name').value.trim(),
+    contact_name: document.getElementById('sup-contact').value.trim() || null,
+    phone:        document.getElementById('sup-phone').value.trim()   || null,
+    // FIX: same EmailStr issue — send null not "" when field is blank
+    email:        emailRaw || null,
+    address:      document.getElementById('sup-addr').value.trim()   || null,
+  };
+  if (!p.name) { toast('Supplier name required','error'); return; }
+  try {
+    await req('POST', '/suppliers', p);
+    toast('Supplier added','success'); closeMo('mo-add-supplier'); loadSuppliers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// CUSTOMERS
+// ══════════════════════════════════════════════
+async function loadCustomers() {
+  try {
+    allCustomers = await req('GET', '/customers?limit=300');
+    renderCustomers(allCustomers);
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function renderCustomers(data) {
+  const tb = document.getElementById('cust-tb');
+  if (!data.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">No patients yet</td></tr>'; return; }
+  tb.innerHTML = data.map(c=>`<tr>
+    <td class="td-strong">👤 ${c.full_name}</td>
+    <td class="mono">${c.phone||'—'}</td>
+    <td>${c.email||'—'}</td>
+    <td class="mono">${c.id_number||'—'}</td>
+    <td><span class="badge b-violet">⭐ ${c.loyalty_points||0}</span></td>
+    <td>${c.is_active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+  </tr>`).join('');
+}
+
+function filterCustomers() {
+  const q = document.getElementById('cust-q').value.toLowerCase();
+  renderCustomers(allCustomers.filter(c=>c.full_name.toLowerCase().includes(q)||(c.phone||'').includes(q)));
+}
+
+async function addCustomer() {
+  const dobRaw   = document.getElementById('c-dob').value;    // "YYYY-MM-DD" or ""
+  const emailRaw = document.getElementById('c-email').value.trim();
+
+  // FIX 1: EmailStr rejects "" (empty string) — only send email if user typed one.
+  // FIX 2: date_of_birth must be a valid ISO datetime string or null, never "".
+  // FIX 3: All optional text fields send null (not "") so the backend doesn't
+  //         try to validate empty strings against min_length constraints.
+  const p = {
+    full_name:    document.getElementById('c-name').value.trim(),
+    phone:        document.getElementById('c-phone').value.trim()  || null,
+    email:        emailRaw || null,       // null → field omitted from validation
+    id_number:    document.getElementById('c-id').value.trim()    || null,
+    insurance_no: document.getElementById('c-ins').value.trim()   || null,
+    // date input gives "YYYY-MM-DD"; append T00:00:00 for a valid ISO string.
+    // Sending a raw date string ("2000-01-01") without time can be rejected by
+    // Pydantic datetime parsing on some platforms.
+    date_of_birth: dobRaw ? dobRaw + 'T00:00:00' : null,
+    notes: null,
+  };
+
+  if (!p.full_name) { toast('Patient name is required', 'error'); return; }
+  if (p.full_name.length < 2) { toast('Name must be at least 2 characters', 'error'); return; }
+
+  try {
+    await req('POST', '/customers', p);
+    toast('Patient registered successfully', 'success');
+    closeMo('mo-add-customer');
+    // Clear form fields for next entry
+    ['c-name','c-phone','c-email','c-id','c-ins','c-dob'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    loadCustomers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function searchPosCust() {
+  const q = document.getElementById('pos-cust-q').value.trim();
+  const el = document.getElementById('pos-cust-res');
+  if (q.length < 2) return;
+  try {
+    const data = await req('GET', `/customers?q=${encodeURIComponent(q)}&limit=5`);
+    if (!data.length) { el.innerHTML = '<div style="color:var(--text3);text-align:center;padding:16px;font-size:13px">No patients found</div>'; return; }
+    el.innerHTML = data.map(c=>`
+      <div onclick="pickCustomer(${c.id},${JSON.stringify(c.full_name)})"
+        style="padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);cursor:pointer;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:border-color .12s"
+        onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div>
+          <div style="font-weight:700;font-size:13px">👤 ${c.full_name}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${c.phone||c.email||'No contact info'}</div>
+        </div>
+        <span class="badge b-violet">⭐ ${c.loyalty_points||0}</span>
+      </div>`).join('');
+  } catch(e){}
+}
+
+function pickCustomer(id, name) {
+  custId = id; custName = name;
+  document.getElementById('cust-label').textContent = name;
+  closeMo('mo-customer');
+  toast('Patient: ' + name, 'success', 2000);
+}
+
+function clearCustomer() {
+  custId = null; custName = null;
+  document.getElementById('cust-label').textContent = 'Walk-in';
+  closeMo('mo-customer');
+}
+
+// ══════════════════════════════════════════════
+// USERS
+// ══════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const data = await req('GET', '/users');
+    const tb = document.getElementById('users-tb');
+    if (!data.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">No staff accounts</td></tr>'; return; }
+    tb.innerHTML = data.map(u=>`<tr>
+      <td class="td-strong">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">${u.full_name[0]}</div>
+          ${u.full_name}
+        </div>
+      </td>
+      <td>${u.email}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td style="color:var(--text3)">${u.last_login?new Date(u.last_login).toLocaleDateString('en-KE'):'Never'}</td>
+      <td>${u.is_active?'<span class="badge b-green">Active</span>':'<span class="badge b-red">Inactive</span>'}</td>
+    </tr>`).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function addUser() {
+  const pass = document.getElementById('u-pass').value;
+  const emailRaw = document.getElementById('u-email').value.trim();
+
+  // FIX: surface password complexity requirements BEFORE hitting the backend,
+  // so the cashier gets a clear message instead of a raw 422 validation error.
+  if (!pass || pass.length < 8) { toast('Password must be at least 8 characters', 'error'); return; }
+  if (!/[A-Z]/.test(pass)) { toast('Password must contain at least one uppercase letter', 'error'); return; }
+  if (!/[a-z]/.test(pass)) { toast('Password must contain at least one lowercase letter', 'error'); return; }
+  if (!/[0-9]/.test(pass)) { toast('Password must contain at least one number', 'error'); return; }
+
+  const p = {
+    full_name: document.getElementById('u-fname').value.trim(),
+    email:     emailRaw,
+    password:  pass,
+    phone:     document.getElementById('u-phone').value.trim() || null,
+    role:      document.getElementById('u-role').value,
+  };
+  if (!p.full_name || !p.email || !p.password) { toast('Name, email and password are required','error'); return; }
+  try {
+    await req('POST', '/users', p);
+    toast('Staff account created','success'); closeMo('mo-add-user'); loadUsers();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// ALERTS
+// ══════════════════════════════════════════════
+async function loadAlerts() {
+  try {
+    const data = await req('GET', `/alerts?is_resolved=${alertsResolved}`);
+    updateAlertBadge(alertsResolved ? undefined : data.length);
+    const el = document.getElementById('alerts-wrap');
+    if (!data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><p>' + (alertsResolved ? 'No resolved alerts' : 'No active alerts — all good!') + '</p></div>'; return; }
+    el.innerHTML = data.map(a => alertCard(a, !alertsResolved)).join('');
+  } catch(e) { toast(e.message,'error'); }
+}
+
+function alertCard(a, showResolve) {
+  const isOut = a.alert_type === 'out_of_stock';
+  const dotColor = isOut ? 'var(--rose)' : a.alert_type === 'expiry' ? 'var(--amber)' : 'var(--amber)';
+  const typeColor = isOut ? 'var(--rose)' : 'var(--amber)';
+  return `<div class="alert-card">
+    <div class="alert-dot" style="background:${dotColor}"></div>
+    <div class="alert-body">
+      <div class="alert-type" style="color:${typeColor}">${a.alert_type.replace(/_/g,' ')}</div>
+      <div class="alert-msg">${a.message}</div>
+      <div class="alert-time">${new Date(a.created_at).toLocaleString('en-KE')}</div>
+    </div>
+    ${showResolve ? `<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;flex-shrink:0" onclick="resolveAlert(${a.id})">✓ Resolve</button>` : ''}
+  </div>`;
+}
+
+function toggleAlertFilter(resolved) {
+  alertsResolved = resolved;
+  document.getElementById('filter-unresolved').style.background = !resolved ? 'var(--accent-dim)' : '';
+  document.getElementById('filter-unresolved').style.color = !resolved ? 'var(--accent)' : '';
+  document.getElementById('filter-resolved').style.background = resolved ? 'var(--accent-dim)' : '';
+  document.getElementById('filter-resolved').style.color = resolved ? 'var(--accent)' : '';
+  loadAlerts();
+}
+
+async function resolveAlert(id) {
+  try {
+    await req('POST', `/alerts/${id}/resolve`);
+    toast('Alert resolved','success'); loadAlerts();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function scanAlerts() {
+  toast('Scanning inventory...','info',3000);
+  try {
+    const r = await req('POST', '/alerts/scan');
+    toast(r.message,'info'); loadAlerts();
+  } catch(e) { toast(e.message,'error'); }
+}
+
+// ══════════════════════════════════════════════
+// REPORTS
+// ══════════════════════════════════════════════
+function initReports() {
+  // Set default dates
+  const today = new Date().toISOString().split('T')[0];
+  const monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+  document.getElementById('rpt-from').value = monthAgo;
+  document.getElementById('rpt-to').value = today;
+  loadStockSummary();
+}
+
+async function loadReport() {
+  const from = document.getElementById('rpt-from').value;
+  const to = document.getElementById('rpt-to').value;
+  if (!from||!to) { toast('Select date range','error'); return; }
+  try {
+    const r = await req('GET', `/reports/sales-summary?from_date=${from}T00:00:00&to_date=${to}T23:59:59`);
+    document.getElementById('rpt-result').innerHTML = `
+      <div class="rpt-grid">
+        <div class="stat" style="border-top:2px solid var(--emerald)">
+          <div class="stat-label">Total Sales</div>
+          <div class="stat-value">${r.total_sales}</div>
+          <div class="stat-delta">${from} → ${to}</div>
+        </div>
+        <div class="stat" style="border-top:2px solid var(--accent)">
+          <div class="stat-label">Gross Revenue</div>
+          <div class="stat-value" style="font-size:18px">KES ${Number(r.total_revenue).toLocaleString()}</div>
+          <div class="stat-delta">before discounts</div>
+        </div>
+        <div class="stat" style="border-top:2px solid var(--violet)">
+          <div class="stat-label">Net Revenue</div>
+          <div class="stat-value" style="font-size:18px">KES ${Number(r.net_revenue).toLocaleString()}</div>
+          <div class="stat-delta">after discounts</div>
+        </div>
+      </div>`;
+    const top = await req('GET', `/reports/top-medicines?from_date=${from}T00:00:00&to_date=${to}T23:59:59`);
+    document.getElementById('top-meds-tb').innerHTML = top.length
+      ? top.map((m,i)=>`<tr>
+          <td style="color:var(--text3);font-weight:700">#${i+1}</td>
+          <td class="td-strong">${m.medicine_name}</td>
+          <td class="mono">${m.total_quantity_sold}</td>
+          <td class="mono td-strong" style="color:var(--emerald)">KES ${Number(m.total_revenue).toLocaleString()}</td>
+        </tr>`).join('')
+      : '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">No sales data for this period</td></tr>';
+  } catch(e) { toast(e.message,'error'); }
+}
+
+async function loadStockSummary() {
+  try {
+    const data = await req('GET', '/inventory/summary/by-medicine');
+    const el = document.getElementById('stock-summary-list');
+    if (!data.length) { el.innerHTML = '<div style="color:var(--text3);font-size:13px">No stock data</div>'; return; }
+    el.innerHTML = data.slice(0,12).map(r => {
+      const pct = Math.min(100, Math.round((r.total_quantity/50)*100));
+      const color = pct < 20 ? 'var(--rose)' : pct < 50 ? 'var(--amber)' : 'var(--emerald)';
+      return `<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span style="font-weight:600;color:var(--text)">${r.medicine_name}</span>
+          <span class="mono" style="font-size:11px;color:${color}">${r.total_quantity} units</span>
+        </div>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar-bg" style="height:6px"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════
+// BADGE HELPERS
+// ══════════════════════════════════════════════
+function statusBadge(s) {
+  const map = {completed:'b-green',voided:'b-red',pending:'b-amber',refunded:'b-violet'};
+  return `<span class="badge ${map[s]||'b-gray'}">${s}</span>`;
+}
+function payBadge(p) {
+  const map = {cash:'b-green',mpesa:'b-blue',card:'b-violet',insurance:'b-amber'};
+  return `<span class="badge ${map[p]||'b-gray'}">${p}</span>`;
+}
+function roleBadge(r) {
+  const map = {admin:'b-red',pharmacist:'b-blue',cashier:'b-green'};
+  return `<span class="badge ${map[r]||'b-gray'}">${r}</span>`;
+}
+
+// ══════════════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════════════
+function openMo(id) { document.getElementById(id)?.classList.add('open'); }
+function closeMo(id) { document.getElementById(id)?.classList.remove('open'); }
+document.querySelectorAll('.mo').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.mo.open').forEach(m=>m.classList.remove('open'));
+  if (e.key === '/' && curPage !== 'pos' && document.activeElement.tagName !== 'INPUT') {
+    e.preventDefault();
+    goPage('pos', document.querySelector('[data-page=pos]'));
+    setTimeout(()=>document.getElementById('med-q')?.focus(), 100);
+  }
+});
+
+// Init report dates
+const _today = new Date().toISOString().split('T')[0];
+const _monthAgo = new Date(Date.now()-30*86400000).toISOString().split('T')[0];
+document.getElementById('rpt-from').value = _monthAgo;
+document.getElementById('rpt-to').value = _today;
+</script>
+</body>
+</html>
