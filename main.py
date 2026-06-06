@@ -11,6 +11,9 @@ WHAT HAPPENS ON STARTUP:
 RUN WITH:
     uvicorn main:app --reload --port 8000
 """
+#for connecting FE with BE
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 import logging
 from contextlib import asynccontextmanager
@@ -180,7 +183,7 @@ app.add_middleware(
 if not settings.DEBUG:
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["pos.kaziflex.com", "api.kaziflex.com", "localhost"],
+        allowed_hosts=["pos.kaziflex.com", "api.kaziflex.com","flex-pharmacy-pos.onrender.com", "localhost"],
     )
 
 
@@ -197,7 +200,12 @@ app.include_router(po_router)
 app.include_router(alerts_router)
 app.include_router(reports_router)
 
+# Serve frontend
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+@app.get("/", include_in_schema=False)
+def serve_frontend():
+    return FileResponse("static/pharmacy_pos_frontend.html")
 # ── Health check ─────────────────────────────────────────────────────────────
 
 @app.get("/health", tags=["System"])

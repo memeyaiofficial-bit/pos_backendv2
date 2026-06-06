@@ -1091,7 +1091,7 @@ textarea{resize:vertical;min-height:80px}
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
-const API = 'http://localhost:8000';
+const API = '';
 
 // ══════════════════════════════════════════════
 // STATE
@@ -1496,11 +1496,11 @@ async function doSale() {
 
 async function submitSale(method, total, mpesaReceipt) {
   const payload = {
-    items:          cart.map(i => ({medicine_id: i.id, quantity: i.qty, discount_pct: 0})),
+    items: cart.map(i=>({medicine_id:i.id, quantity:i.qty, discount_pct:0})),
     payment_method: method,
-    amount_paid:    parseFloat(total.toFixed(2)),
-    customer_id:    custId || null,
-    mpesa_receipt:  mpesaReceipt || null,
+    amount_paid: parseFloat(total.toFixed(2)),
+    customer_id: custId || null,
+    mpesa_receipt: mpesaReceipt || null,
   };
   try {
     const sale = await req('POST', '/sales', payload);
@@ -1508,11 +1508,7 @@ async function submitSale(method, total, mpesaReceipt) {
     cart = []; renderCart();
     custId = null; custName = null;
     document.getElementById('cust-label').textContent = 'Walk-in';
-    return true;  // FIX 6: signal success to completeMpesaSale()
-  } catch(e) {
-    toast(e.message, 'error', 7000);
-    return false; // FIX 6: signal failure — caller decides what to do
-  }
+  } catch(e) { toast(e.message, 'error', 7000); }
 }
 
 // ══════════════════════════════════════════════
@@ -1601,21 +1597,10 @@ function mpesaTimeout() {
 function cancelMpesa() { if(mpesaPollTimer) clearInterval(mpesaPollTimer); resetMpesa(); closeMo('mo-mpesa'); }
 
 async function completeMpesaSale() {
-  // FIX 6: close modal AFTER submitSale() resolves, not before.
-  // Closing first then calling submitSale() meant: if the user hit "Complete Sale"
-  // and the POST failed, the modal was already gone and the cart was never cleared
-  // — leaving the POS in a broken half-submitted state.
-  // Also snapshot the cart total NOW before resetMpesa() clears mpesaCheckoutId.
-  const total    = cart.reduce((s,i) => s + i.price * i.qty, 0) * 1.16;
-  const receipt  = mpesaCheckoutId; // snapshot before reset
-  const success  = await submitSale('mpesa', total, receipt);
-  // Only close and reset if the sale actually posted (submitSale returns true on success)
-  if (success) {
-    closeMo('mo-mpesa');
-    resetMpesa();
-  }
-  // If submitSale failed, the modal stays open so the cashier can see the error
-  // and retry without losing the confirmed M-Pesa receipt.
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0)*1.16;
+  closeMo('mo-mpesa');
+  await submitSale('mpesa', total, mpesaCheckoutId);
+  resetMpesa();
 }
 
 // ══════════════════════════════════════════════
@@ -1645,33 +1630,8 @@ function renderSales(data) {
 }
 
 function filterSales() {
-  // FIX 7: previously filterSales() filtered by receipt text then passed the
-  // result to renderSales(), which applied the status filter AGAIN on the already-
-  // filtered array. If you typed a receipt AND picked a status, one filter would
-  // reset the other. Now both filters are applied together in one place.
-  const q      = document.getElementById('sales-q').value.toLowerCase().trim();
-  const status = document.getElementById('sales-status-filter').value;
-
-  const filtered = allSales.filter(s => {
-    const matchText   = !q      || s.receipt_number.toLowerCase().includes(q);
-    const matchStatus = !status || s.status === status;
-    return matchText && matchStatus;
-  });
-
-  const tb = document.getElementById('sales-tb');
-  if (!filtered.length) {
-    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No sales match your search</td></tr>';
-    return;
-  }
-  tb.innerHTML = filtered.map(s => `<tr>
-    <td class="mono td-strong">${s.receipt_number}</td>
-    <td>${new Date(s.sold_at).toLocaleString('en-KE')}</td>
-    <td>${s.customer_id ? '👤 #'+s.customer_id : '<span style="color:var(--text3)">Walk-in</span>'}</td>
-    <td>${s.items?.length||0} item${(s.items?.length||0)===1?'':'s'}</td>
-    <td class="td-strong mono">KES ${Number(s.total_amount).toLocaleString()}</td>
-    <td>${payBadge(s.payment_method)}</td>
-    <td>${statusBadge(s.status)}</td>
-  </tr>`).join('');
+  const q = document.getElementById('sales-q').value.toLowerCase();
+  renderSales(allSales.filter(s => s.receipt_number.toLowerCase().includes(q)));
 }
 
 // ══════════════════════════════════════════════
@@ -1707,40 +1667,26 @@ function filterMeds() {
 }
 
 async function addMedicine() {
-  const name  = document.getElementById('m-name').value.trim();
-  const price = parseFloat(document.getElementById('m-price').value);
-
-  // FIX 5: validate before building payload so we never silently send price=0.
-  // The backend schema accepts ge=0.00 so 0 would pass schema validation but
-  // create a free medicine — catch it here with a clear message instead.
-  if (!name)           { toast('Medicine name is required', 'error'); return; }
-  if (!price || price <= 0) { toast('Unit price must be greater than KES 0', 'error'); return; }
-
   const p = {
-    name,
-    generic_name:          document.getElementById('m-generic').value.trim()  || null,
-    brand_name:            document.getElementById('m-brand').value.trim()    || null,
-    dosage_form:           document.getElementById('m-form').value.trim()     || null,
-    strength:              document.getElementById('m-strength').value.trim() || null,
-    route:                 document.getElementById('m-route').value.trim()    || null,
-    unit_price:            price,
-    reorder_level:         parseInt(document.getElementById('m-reorder').value) || 10,
-    barcode:               document.getElementById('m-barcode').value.trim()  || null,
-    manufacturer:          document.getElementById('m-mfg').value.trim()      || null,
-    requires_prescription: document.getElementById('m-rx').value === 'true',
-    is_controlled:         document.getElementById('m-ctrl').value === 'true',
+    name: document.getElementById('m-name').value.trim(),
+    generic_name: document.getElementById('m-generic').value||null,
+    brand_name: document.getElementById('m-brand').value||null,
+    dosage_form: document.getElementById('m-form').value||null,
+    strength: document.getElementById('m-strength').value||null,
+    route: document.getElementById('m-route').value||null,
+    unit_price: parseFloat(document.getElementById('m-price').value)||0,
+    reorder_level: parseInt(document.getElementById('m-reorder').value)||10,
+    barcode: document.getElementById('m-barcode').value||null,
+    manufacturer: document.getElementById('m-mfg').value||null,
+    requires_prescription: document.getElementById('m-rx').value==='true',
+    is_controlled: document.getElementById('m-ctrl').value==='true',
   };
+  if (!p.name) { toast('Medicine name required','error'); return; }
+  if (!p.unit_price) { toast('Unit price required','error'); return; }
   try {
     await req('POST', '/medicines', p);
-    toast('Medicine added successfully', 'success');
-    closeMo('mo-add-med');
-    // Clear form for next entry
-    ['m-name','m-generic','m-brand','m-form','m-strength','m-route',
-     'm-price','m-reorder','m-barcode','m-mfg'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    loadMedicines();
-  } catch(e) { toast(e.message, 'error'); }
+    toast('Medicine added','success'); closeMo('mo-add-med'); loadMedicines();
+  } catch(e) { toast(e.message,'error'); }
 }
 
 async function syncWHO() {
