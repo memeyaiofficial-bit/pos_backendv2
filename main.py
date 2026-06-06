@@ -58,7 +58,7 @@ async def lifespan(app: FastAPI):
 
     # 1. Create all tables
     logger.info("Creating database tables...")
-    #Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     logger.info("Database ready.")
 
     # 2. Seed first admin
