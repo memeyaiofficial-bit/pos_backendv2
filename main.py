@@ -1,15 +1,9 @@
 """
-main.py
-────────
-FastAPI application factory.
 
 WHAT HAPPENS ON STARTUP:
   1. All SQLAlchemy models are created (CREATE TABLE IF NOT EXISTS).
   2. A default admin account is seeded if the users table is empty.
   3. An initial expiry alert scan runs.
-
-RUN WITH:
-    uvicorn main:app --reload --port 8000
 """
 #for connecting FE with BE
 from fastapi.staticfiles import StaticFiles
