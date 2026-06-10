@@ -1794,7 +1794,7 @@ async function addSupplier() {
 // ══════════════════════════════════════════════
 async function loadCustomers() {
   try {
-    allCustomers = await req('GET', '/customers?limit=300');
+    allCustomers = await req('GET', '/customers?limit=200');
     renderCustomers(allCustomers);
   } catch(e) { toast(e.message,'error'); }
 }
