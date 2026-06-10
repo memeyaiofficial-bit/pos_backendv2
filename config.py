@@ -21,7 +21,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # ── App meta ──────────────────────────────────────────────────────────
-    APP_NAME: str = "Flex Pharmacy POS"
+    APP_NAME: str = "Uza Pap POS"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 

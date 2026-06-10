@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: flex-pharmacy-pos
+    name: uza-pap-pos
     runtime: python
 
     
@@ -44,7 +44,7 @@ services:
         sync: false
 
       - key: MPESA_CALLBACK_URL
-        value: https://flex-pharmacy-pos.onrender.com/payments/mpesa/callback
+        value: https://uza-pap-pos.onrender.com/payments/mpesa/callback
 
       - key: MPESA_ENV
         value: sandbox
