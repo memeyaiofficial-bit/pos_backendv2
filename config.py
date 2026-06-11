@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     # ── Security ──────────────────────────────────────────────────────────
     SECRET_KEY: SecretStr  # Required – no default so startup fails if missing
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 1
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ── Database ──────────────────────────────────────────────────────────
     DATABASE_URL: str = "sqlite:///./pharmacy_pos.db"

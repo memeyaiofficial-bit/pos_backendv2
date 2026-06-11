@@ -739,7 +739,6 @@ textarea{resize:vertical;min-height:80px}
           <div class="cart-ft">
             <div class="total-rows">
               <div class="tr"><span>Subtotal</span><span id="c-sub" class="mono">KES 0.00</span></div>
-              <div class="tr"><span>VAT (16%)</span><span id="c-tax" class="mono">KES 0.00</span></div>
               <div class="tr grand"><span>Total</span><span id="c-total">KES 0.00</span></div>
             </div>
             <div class="pay-grid">
@@ -932,7 +931,12 @@ textarea{resize:vertical;min-height:80px}
   <div class="mo-box">
     <div class="mo-hd"><div class="mo-title">Receive Stock</div><button class="close-x" onclick="closeMo('mo-add-stock')">✕</button></div>
     <div class="fgrid">
-      <div class="fg full"><label>Medicine ID *</label><input type="number" id="s-med" placeholder="Enter medicine ID"/></div>
+      <div class="fg full"><label>Medicine Name *</label><input type="text" id="s-med-search" placeholder="Type medicine name to search..." oninput="searchStockMedicine()" autocomplete="off"/>
+  <div id="s-med-results" style="display:none;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);margin-top:4px;max-height:160px;overflow-y:auto"></div>
+  <!-- Hidden field stores the selected medicine ID -->
+  <input type="hidden" id="s-med" value=""/>
+  <div id="s-med-selected" style="display:none;margin-top:6px;padding:8px 10px;background:var(--accent-dim);border:1px solid rgba(59,130,246,.2);border-radius:var(--r2);font-size:12px;color:var(--accent);font-weight:600"></div>
+</div>
       <div class="fg"><label>Batch Number</label><input id="s-batch" placeholder="BATCH001"/></div>
       <div class="fg"><label>Quantity *</label><input type="number" id="s-qty" placeholder="0"/></div>
       <div class="fg"><label>Unit Cost (KES) *</label><input type="number" id="s-cost" step="0.01" placeholder="0.00"/></div>
@@ -1116,11 +1120,21 @@ async function req(method, path, body) {
   };
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch(API + path, opts).catch(() => { throw new Error('Cannot reach server at ' + API); });
+  if (r.status === 401) {
+    toast('Session expired. Please sign in again.', 'error', 6000);
+    localStorage.removeItem('pos_token');
+    localStorage.removeItem('pos_me');
+    token = '';
+    me = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    return null;
+  }
   const d = await r.json().catch(() => ({}));
   if (!r.ok) {
     const msg = d.message || d.detail || `Error ${r.status}`;
     throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
   }
+
   return d;
 }
 
@@ -1191,7 +1205,32 @@ function logout() {
   document.getElementById('login-screen').style.display = 'flex';
 }
 
-if (token && me) initUI();
+// check token isn't expired before auto-restoring session
+if (token && me) {
+  try {
+    // Decode JWT payload to check expiry
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiresAt = payload.exp * 1000; // convert to ms
+    const minutesLeft = Math.round((expiresAt - Date.now()) / 60000);
+
+    if (Date.now() < expiresAt) {
+      // Token still valid — restore session
+      initUI();
+      if (minutesLeft < 30) {
+        toast(`Session expires in ${minutesLeft} minutes`, 'warn', 5000);
+      }
+    } else {
+      // Token expired — clear and show login
+      localStorage.removeItem('pos_token');
+      localStorage.removeItem('pos_me');
+      toast('Your session expired. Please sign in again.', 'info');
+    }
+  } catch(e) {
+    // Can't decode token — clear and show login
+    localStorage.removeItem('pos_token');
+    localStorage.removeItem('pos_me');
+  }
+}
 
 // ══════════════════════════════════════════════
 // NAV
@@ -1386,6 +1425,7 @@ async function buildExpiryHeatmap() {
 }
 
 function updateAlertBadge(count) {
+  if (!token) return;
   const b = document.getElementById('alert-badge');
   if (count === undefined) req('GET','/alerts?is_resolved=false').then(a=>updateAlertBadge(a.length)).catch(()=>{});
   else { b.textContent = count; b.style.display = count > 0 ? 'inline-flex' : 'none'; }
@@ -1465,12 +1505,10 @@ function renderCart() {
 function chgQty(i, d) { cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1); renderCart(); }
 
 function updateTotals() {
-  const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
-  const tax = sub * 0.16;
-  const total = sub + tax;
-  document.getElementById('c-sub').textContent = 'KES ' + sub.toFixed(2);
-  document.getElementById('c-tax').textContent = 'KES ' + tax.toFixed(2);
-  document.getElementById('c-total').textContent = 'KES ' + total.toFixed(2);
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+
+  document.getElementById('c-sub').textContent = 'KES ' + total.toFixed(2);
+  document.getElementById('c-total').textContent = 'KES ' + total.toFixed(2);;
 }
 
 function selPay(m, btn) {
@@ -1481,7 +1519,7 @@ function selPay(m, btn) {
 
 async function doSale() {
   if (!cart.length) { toast('Cart is empty','error'); return; }
-  const total = cart.reduce((s,i)=>s+i.price*i.qty,0)*1.16;
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
 
   if (payMethod === 'mpesa') {
     // Open M-Pesa flow
@@ -1524,7 +1562,7 @@ function resetMpesa() {
 async function initMpesa() {
   const phone = document.getElementById('mp-phone').value.trim();
   if (!phone) { toast('Enter customer phone number', 'error'); return; }
-  const total = cart.reduce((s,i)=>s+i.price*i.qty,0)*1.16;
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   const saleId = 0; // Will be created after payment confirmed
 
   // Show waiting step
@@ -1597,7 +1635,7 @@ function mpesaTimeout() {
 function cancelMpesa() { if(mpesaPollTimer) clearInterval(mpesaPollTimer); resetMpesa(); closeMo('mo-mpesa'); }
 
 async function completeMpesaSale() {
-  const total = cart.reduce((s,i)=>s+i.price*i.qty,0)*1.16;
+  const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   closeMo('mo-mpesa');
   await submitSale('mpesa', total, mpesaCheckoutId);
   resetMpesa();
@@ -1630,8 +1668,27 @@ function renderSales(data) {
 }
 
 function filterSales() {
-  const q = document.getElementById('sales-q').value.toLowerCase();
-  renderSales(allSales.filter(s => s.receipt_number.toLowerCase().includes(q)));
+  const q      = document.getElementById('sales-q').value.toLowerCase().trim();
+  const status = document.getElementById('sales-status-filter').value;
+  const filtered = allSales.filter(s => {
+    const matchText   = !q      || s.receipt_number.toLowerCase().includes(q);
+    const matchStatus = !status || s.status === status;
+    return matchText && matchStatus;
+  });
+  const tb = document.getElementById('sales-tb');
+  if (!filtered.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">No sales match your search</td></tr>';
+    return;
+  }
+  tb.innerHTML = filtered.map(s => `<tr>
+    <td class="mono td-strong">${s.receipt_number}</td>
+    <td>${new Date(s.sold_at).toLocaleString('en-KE')}</td>
+    <td>${s.customer_id ? '👤 #'+s.customer_id : '<span style="color:var(--text3)">Walk-in</span>'}</td>
+    <td>${s.items?.length||0} item${(s.items?.length||0)===1?'':'s'}</td>
+    <td class="td-strong mono">KES ${Number(s.total_amount).toLocaleString()}</td>
+    <td>${payBadge(s.payment_method)}</td>
+    <td>${statusBadge(s.status)}</td>
+  </tr>`).join('');
 }
 
 // ══════════════════════════════════════════════
@@ -1726,24 +1783,83 @@ async function loadInventory() {
     }).join('');
   } catch(e) { toast(e.message,'error'); }
 }
+// ── Stock medicine search ─────────────────────────────────────────────
+async function searchStockMedicine() {
+  const q = document.getElementById('s-med-search').value.trim();
+  const results = document.getElementById('s-med-results');
+  const selected = document.getElementById('s-med-selected');
 
+  document.getElementById('s-med').value = '';
+  selected.style.display = 'none';
+
+  if (q.length < 1) { results.style.display = 'none'; return; }
+
+  try {
+    const meds = await req('GET', `/medicines?q=${encodeURIComponent(q)}&limit=8`);
+    if (!meds.length) {
+      results.style.display = 'block';
+      results.innerHTML = '<div style="padding:10px 12px;font-size:12px;color:var(--text3)">No medicines found</div>';
+      return;
+    }
+    results.style.display = 'block';
+    results.innerHTML = meds.map(m => `
+      <div onclick="selectStockMedicine(${m.id}, '${m.name.replace(/'/g,"\\'")} ${m.strength||''}')"
+        style="padding:10px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background .1s"
+        onmouseover="this.style.background='var(--bg4)'"
+        onmouseout="this.style.background='transparent'">
+        <div style="font-weight:600;color:var(--text)">${m.name}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">
+          ${m.generic_name||''} ${m.strength||''} · KES ${Number(m.unit_price).toLocaleString()} · ID: ${m.id}
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+function selectStockMedicine(id, name) {
+  document.getElementById('s-med').value = id;
+  document.getElementById('s-med-search').value = '';
+  document.getElementById('s-med-results').style.display = 'none';
+  const sel = document.getElementById('s-med-selected');
+  sel.style.display = 'block';
+  sel.textContent = `✓ Selected: ${name} (ID: ${id})`;
+}
+
+// ── Receive Stock ─────────────────────────────────────────────────────
 async function addStock() {
   const exp = document.getElementById('s-exp').value;
+  const medicineId = parseInt(document.getElementById('s-med').value);
+  if (!medicineId) { toast('Please select a medicine from the search results', 'error'); return; }
+
   const p = {
-    medicine_id: parseInt(document.getElementById('s-med').value),
-    batch_number: document.getElementById('s-batch').value||null,
-    quantity: parseInt(document.getElementById('s-qty').value),
-    unit_cost: parseFloat(document.getElementById('s-cost').value),
+    medicine_id:   medicineId,
+    batch_number:  document.getElementById('s-batch').value || null,
+    quantity:      parseInt(document.getElementById('s-qty').value),
+    unit_cost:     parseFloat(document.getElementById('s-cost').value),
     selling_price: parseFloat(document.getElementById('s-price').value),
-    expires_at: exp ? new Date(exp).toISOString() : null,
-    supplier_id: parseInt(document.getElementById('s-sup').value)||null,
+    expires_at:    exp ? new Date(exp).toISOString() : null,
+    supplier_id:   parseInt(document.getElementById('s-sup').value) || null,
   };
-  if (!p.medicine_id||!p.quantity||!p.unit_cost||!p.selling_price) { toast('Fill in required fields','error'); return; }
+
+  if (!p.quantity || !p.unit_cost || !p.selling_price) {
+    toast('Fill in quantity, cost and selling price', 'error'); return;
+  }
+
   try {
     await req('POST', '/inventory', p);
-    toast('Stock received','success'); closeMo('mo-add-stock'); loadInventory();
-  } catch(e) { toast(e.message,'error'); }
+    toast('Stock received', 'success');
+    closeMo('mo-add-stock');
+    // Clear form
+    document.getElementById('s-med').value = '';
+    document.getElementById('s-med-search').value = '';
+    document.getElementById('s-med-selected').style.display = 'none';
+    document.getElementById('s-med-results').style.display = 'none';
+    ['s-batch','s-qty','s-cost','s-price','s-exp','s-sup'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    loadInventory();
+  } catch(e) { toast(e.message, 'error'); }
 }
+
 
 // ══════════════════════════════════════════════
 // SUPPLIERS
@@ -1778,7 +1894,7 @@ async function addSupplier() {
     name:         document.getElementById('sup-name').value.trim(),
     contact_name: document.getElementById('sup-contact').value.trim() || null,
     phone:        document.getElementById('sup-phone').value.trim()   || null,
-    // FIX: same EmailStr issue — send null not "" when field is blank
+    //  same EmailStr issue — send null not "" when field is blank
     email:        emailRaw || null,
     address:      document.getElementById('sup-addr').value.trim()   || null,
   };
@@ -2075,7 +2191,18 @@ function roleBadge(r) {
 // MODALS
 // ══════════════════════════════════════════════
 function openMo(id) { document.getElementById(id)?.classList.add('open'); }
-function closeMo(id) { document.getElementById(id)?.classList.remove('open'); }
+function closeMo(id) {
+  document.getElementById(id)?.classList.remove('open');
+  // Clear stock medicine search when receive stock modal closes
+  if (id === 'mo-add-stock') {
+    document.getElementById('s-med').value = '';
+    document.getElementById('s-med-search').value = '';
+    const results = document.getElementById('s-med-results');
+    const selected = document.getElementById('s-med-selected');
+    if (results) results.style.display = 'none';
+    if (selected) selected.style.display = 'none';
+  }
+}
 document.querySelectorAll('.mo').forEach(o => {
   o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
 });

@@ -1,5 +1,4 @@
 """
-schemas/schemas.py
 ──────────────────
 Pydantic v2 models for request validation and response serialisation.
 

@@ -39,7 +39,7 @@ from schemas.schemas import SaleCreateIn
 logger = logging.getLogger(__name__)
 
 # Kenya VAT rate – adjust per jurisdiction
-VAT_RATE = Decimal("0.16")
+VAT_RATE = Decimal("0.00")
 
 
 # ── Receipt number generator ───────────────────────────────────────────────────
@@ -192,8 +192,8 @@ def create_sale(db: Session, payload: SaleCreateIn, cashier: User) -> Sale:
     subtotal = subtotal.quantize(Decimal("0.01"))
     discount_amount = min(payload.discount_amount, subtotal)  # Can't discount more than subtotal
     taxable = subtotal - discount_amount
-    tax_amount = (taxable * VAT_RATE).quantize(Decimal("0.01"))
-    total_amount = (taxable + tax_amount).quantize(Decimal("0.01"))
+    tax_amount = (taxable * VAT_RATE).quantize(Decimal("0.00"))
+    total_amount = (taxable + tax_amount).quantize(Decimal("0.00"))
     change_given = max(Decimal("0.00"), payload.amount_paid - total_amount)
 
     if payload.amount_paid < total_amount:
