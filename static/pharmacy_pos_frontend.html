@@ -1095,7 +1095,7 @@ textarea{resize:vertical;min-height:80px}
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
-const API = '';
+const API = 'http://127.0.0.1:8000';
 
 // ══════════════════════════════════════════════
 // STATE
@@ -1206,31 +1206,62 @@ function logout() {
 }
 
 // check token isn't expired before auto-restoring session
-if (token && me) {
+// Wrap in setTimeout to let localStorage settle after page navigation
+setTimeout(() => {
+  // Re-read from localStorage — values set by landing.html are now available
+  token = localStorage.getItem('pos_token') || '';
+  me = JSON.parse(localStorage.getItem('pos_me') || 'null');
+
+  if (!token) {
+    // No token — show login screen (don't redirect, keep login in index.html)
+    document.getElementById('login-screen').style.display = 'flex';
+    return;
+  }
+
   try {
-    // Decode JWT payload to check expiry
     const payload = JSON.parse(atob(token.split('.')[1]));
-    const expiresAt = payload.exp * 1000; // convert to ms
+    const expiresAt = payload.exp * 1000;
     const minutesLeft = Math.round((expiresAt - Date.now()) / 60000);
 
     if (Date.now() < expiresAt) {
-      // Token still valid — restore session
-      initUI();
-      if (minutesLeft < 30) {
-        toast(`Session expires in ${minutesLeft} minutes`, 'warn', 5000);
+      // Token valid — restore session
+      if (!me) {
+        // me missing — fetch it
+        req('GET', '/auth/me').then(user => {
+          if (user) {
+            me = user;
+            localStorage.setItem('pos_me', JSON.stringify(me));
+            initUI();
+          } else {
+            document.getElementById('login-screen').style.display = 'flex';
+          }
+        }).catch(() => {
+          document.getElementById('login-screen').style.display = 'flex';
+        });
+      } else {
+        initUI();
+        if (minutesLeft < 30) {
+          toast(`Session expires in ${minutesLeft} minutes`, 'warn', 5000);
+        }
       }
     } else {
-      // Token expired — clear and show login
+      // Token expired — show login
       localStorage.removeItem('pos_token');
       localStorage.removeItem('pos_me');
-      toast('Your session expired. Please sign in again.', 'info');
+      token = '';
+      me = null;
+      document.getElementById('login-screen').style.display = 'flex';
+      toast('Your session expired. Please sign in again.', 'info', 5000);
     }
   } catch(e) {
-    // Can't decode token — clear and show login
+    // Bad token — show login
     localStorage.removeItem('pos_token');
     localStorage.removeItem('pos_me');
+    token = '';
+    me = null;
+    document.getElementById('login-screen').style.display = 'flex';
   }
-}
+}, 100);
 
 // ══════════════════════════════════════════════
 // NAV

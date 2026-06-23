@@ -90,7 +90,7 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("Shutting down.")
 
-Limiterimiter = Limiter(key_func=get_remote_address)
+Limiter = Limiter(key_func=get_remote_address)
 # ── App factory ───────────────────────────────────────────────────────────────
 
 app = FastAPI(
@@ -194,18 +194,22 @@ app.include_router(po_router)
 app.include_router(alerts_router)
 app.include_router(reports_router)
 
-# Serve frontend
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-@app.get("/", include_in_schema=False)
-def serve_frontend():
-    return FileResponse("static/pharmacy_pos_frontend.html")
-# ── Health check ─────────────────────────────────────────────────────────────
-
+# ── Health check ────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
 def health():
-    """Simple liveness probe for load balancers / monitoring."""
     return {"status": "ok"}
+
+# ── Frontend routes (must come AFTER all API routers) ───────────────
+@app.get("/", include_in_schema=False)
+def serve_landing():
+    return FileResponse("static/landing.html")
+
+@app.get("/app", include_in_schema=False)
+def serve_pos():
+    return FileResponse("static/index.html")
+
+# ── Static files (must come LAST) ───────────────────────────────────
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Aauthenticated version endpoint for internal tooling
 @app.get("/health/detail", tags=["System"])
