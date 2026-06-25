@@ -38,6 +38,7 @@ class TokenOut(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     expires_in: int  # seconds
+    must_change_credentials: bool = False
 
 
 class TokenRefreshIn(BaseModel):
@@ -482,3 +483,8 @@ class MpesaStatusOut(BaseModel):
     result_desc: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class UpdateCredentialsIn(BaseModel):
+    email: EmailStr
+    current_password: str
+    new_password: str

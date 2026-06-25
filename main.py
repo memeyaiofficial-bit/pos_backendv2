@@ -72,6 +72,7 @@ async def lifespan(app: FastAPI):
                 ),
                 role=UserRole.ADMIN,
                 is_active=True,
+                must_change_credentials=True,
             )
             db.add(admin)
             db.commit()

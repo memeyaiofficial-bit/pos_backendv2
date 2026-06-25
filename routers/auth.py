@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.orm import AuditLog, User
 from schemas.schemas import (
-    LoginIn, PasswordChangeIn, TokenOut, TokenRefreshIn, UserOut,
+    LoginIn, PasswordChangeIn, TokenOut, TokenRefreshIn, UserOut, UpdateCredentialsIn,
 )
 from utils.security import (
     create_access_token, create_refresh_token, decode_refresh_token,
@@ -39,6 +39,7 @@ from fastapi import Request
 limiter = Limiter(key_func=get_remote_address)
 
 from config import get_settings
+from pydantic import EmailStr
 
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -99,6 +100,7 @@ def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
         refresh_token=create_refresh_token(user.id),
         token_type="bearer",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        must_change_credentials=user.must_change_credentials,
     )
 
 
@@ -119,10 +121,12 @@ def refresh_token(payload: TokenRefreshIn, db: Session = Depends(get_db)):
 
     return TokenOut(
         access_token=create_access_token(user.id, user.role.value),
-        refresh_token=create_refresh_token(user.id),   # Rotate refresh token
+        refresh_token=create_refresh_token(user.id),
         token_type="bearer",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        must_change_credentials=user.must_change_credentials,
     )
+
 
 
 @router.get("/me", response_model=UserOut, summary="Get current user profile")
@@ -165,3 +169,51 @@ def change_password(
     db.commit()
 
     return {"message": "Password changed successfully"}
+
+@router.post("/update-credentials")
+def update_credentials(
+    payload: UpdateCredentialsIn,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Forces first-time admin to replace default email/password.
+    """
+
+    if not verify_password(
+        payload.current_password,
+        current_user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Current password is incorrect"
+        )
+
+    # Check email uniqueness
+    existing_user = (
+        db.query(User)
+        .filter(
+            User.email == payload.email.lower(),
+            User.id != current_user.id
+        )
+        .first()
+    )
+
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already in use"
+        )
+
+    current_user.email = payload.email.lower()
+    current_user.hashed_password = hash_password(
+        payload.new_password
+    )
+
+    current_user.must_change_credentials = False
+
+    db.commit()
+
+    return {
+        "message": "Credentials updated successfully"
+    }

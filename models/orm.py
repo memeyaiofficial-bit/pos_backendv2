@@ -100,6 +100,8 @@ class User(Base):
     updated_at       = Column(DateTime, server_default=func.now(), onupdate=func.now())
     last_login       = Column(DateTime, nullable=True)
 
+    must_change_credentials = Column(Boolean, default=False, nullable=False)
+
     # Relationships
     sales      = relationship("Sale", foreign_keys="[Sale.cashier_id]", back_populates="cashier")
     audit_logs = relationship("AuditLog", back_populates="user")

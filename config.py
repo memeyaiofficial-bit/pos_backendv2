@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ── Database ──────────────────────────────────────────────────────────
-    DATABASE_URL: str = "sqlite:///./pharmacy_pos.db"
+    DATABASE_URL: str
 
     # ── OpenFDA (WHO-aligned drug data) ───────────────────────────────────
     OPENFDA_BASE_URL: str = "https://api.fda.gov/drug"
