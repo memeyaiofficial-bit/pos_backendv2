@@ -31,7 +31,7 @@ def upgrade() -> None:
     # Force existing admins to update credentials
     op.execute("""
         UPDATE users
-        SET must_change_credentials = 1
+        SET must_change_credentials = TRUE
         WHERE role = 'ADMIN'
     """)
 
