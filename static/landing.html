@@ -1034,7 +1034,7 @@ function processPayment() {
   }, 4000);
 }
 function goToSystemAfterPayment() {
-  window.location.href = API + '/';
+  window.location.href =  'https://flex-pharmacy-pos.onrender.com/app';
 }
 
 function showLoginError(msg) {
@@ -1056,7 +1056,7 @@ async function doLogin() {
     localStorage.setItem('pos_token', d.access_token);
     if (d.refresh_token) localStorage.setItem('pos_refresh_token', d.refresh_token);
     toast('Signing in...', 'success', 2000);
-    setTimeout(() => { window.location.href = '/static/index.html'; }, 1000);
+    setTimeout(() => { window.location.href = 'https://flex-pharmacy-pos.onrender.com/app'; }, 1000);
   } catch(e) { showLoginError('Could not reach server.'); }
 }
 document.getElementById('li-pass')?.addEventListener('keydown', e => {

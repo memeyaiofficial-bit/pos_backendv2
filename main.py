@@ -207,7 +207,7 @@ def serve_landing():
 
 @app.get("/app", include_in_schema=False)
 def serve_pos():
-    return FileResponse("static/index.html")
+    return FileResponse("static/pharmacy_pos_frontend.html")
 
 # ── Static files (must come LAST) ───────────────────────────────────
 app.mount("/static", StaticFiles(directory="static"), name="static")
