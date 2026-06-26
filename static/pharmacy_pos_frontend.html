@@ -1144,7 +1144,9 @@ textarea{resize:vertical;min-height:80px}
 // ══════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════
-const API = 'http://127.0.0.1:8000';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : 'https://flex-pharmacy-pos.onrender.com';
 
 // ══════════════════════════════════════════════
 // STATE
