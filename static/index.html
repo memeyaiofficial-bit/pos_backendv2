@@ -1,0 +1,2126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Uza Pap POS — Pharmacy Software</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg: #f8fafc;
+        --bg2: #f1f5f9;
+        --bg3: #e2e8f0;
+        --surface: #ffffff;
+        --surface2: #f8fafc;
+        --border: #e2e8f0;
+        --border2: #cbd5e1;
+        --text: #0f172a;
+        --text2: #475569;
+        --text3: #94a3b8;
+        --accent: #0ea5e9;
+        --accent2: #0284c7;
+        --accent3: #38bdf8;
+        --accent-glow: rgba(14, 165, 233, 0.08);
+        --green: #10b981;
+        --green-light: #d1fae5;
+        --red: #ef4444;
+        --red-light: #fee2e2;
+        --r: 16px;
+        --r2: 12px;
+        --f: "Inter", system-ui, sans-serif;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--f);
+        font-size: 15px;
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* ── NAV ── */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 48px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px) saturate(1.5);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+      }
+      .nav-logo-mark {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--accent), var(--accent3));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        position: relative;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+      }
+      .nav-logo-text {
+        font-weight: 800;
+        font-size: 18px;
+        color: var(--text);
+        letter-spacing: -0.02em;
+      }
+      .nav-logo-sub {
+        font-size: 11px;
+        color: var(--text2);
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+      }
+      .nav-links a {
+        color: var(--text2);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      .nav-links a:hover {
+        color: var(--accent);
+      }
+      .btn {
+        padding: 10px 22px;
+        border-radius: var(--r2);
+        border: none;
+        font-size: 14px;
+        font-family: var(--f);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
+      }
+      .btn-ghost {
+        background: transparent;
+        border: 1.5px solid var(--border2);
+        color: var(--text2);
+      }
+      .btn-ghost:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-glow);
+      }
+
+      /* ── HERO ── */
+      #hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 140px 48px 80px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(
+          180deg,
+          #f0f9ff 0%,
+          #e0f2fe 30%,
+          #f8fafc 100%
+        );
+      }
+      .hero-glow {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 50% at 50% 0%,
+            rgba(14, 165, 233, 0.12) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 80% 30%,
+            rgba(56, 189, 248, 0.08) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 30% 30% at 20% 70%,
+            rgba(14, 165, 233, 0.06) 0%,
+            transparent 60%
+          );
+      }
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 760px;
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 30px;
+        background: var(--accent-glow);
+        border: 1.5px solid rgba(14, 165, 233, 0.15);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent2);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 28px;
+      }
+      .hero-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: blink 2.5s infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.2;
+        }
+      }
+      h1 {
+        font-size: clamp(42px, 6vw, 72px);
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        margin-bottom: 24px;
+        color: var(--text);
+      }
+      h1 .accent {
+        background: linear-gradient(135deg, var(--accent), var(--accent3));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero-sub {
+        font-size: 18px;
+        color: var(--text2);
+        max-width: 520px;
+        margin: 0 auto 40px;
+        line-height: 1.7;
+        font-weight: 400;
+      }
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 56px;
+      }
+      .btn-hero {
+        padding: 16px 36px;
+        border-radius: var(--r);
+        border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        cursor: pointer;
+        font-size: 16px;
+        font-family: var(--f);
+        font-weight: 700;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 8px 28px rgba(14, 165, 233, 0.35);
+      }
+      .btn-hero:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(14, 165, 233, 0.45);
+      }
+      .btn-hero-outline {
+        padding: 16px 36px;
+        border-radius: var(--r);
+        border: 1.5px solid var(--border2);
+        background: transparent;
+        color: var(--text2);
+        cursor: pointer;
+        font-size: 16px;
+        font-family: var(--f);
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+      }
+      .btn-hero-outline:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: var(--accent-glow);
+      }
+      .hero-stats {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 48px;
+        flex-wrap: wrap;
+      }
+      .hero-stat {
+        text-align: center;
+      }
+      .hero-stat-val {
+        font-size: 36px;
+        font-weight: 900;
+        color: var(--accent);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .hero-stat-label {
+        font-size: 12px;
+        color: var(--text3);
+        font-weight: 600;
+        margin-top: 6px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      /* ── SECTIONS ── */
+      section {
+        padding: 100px 48px;
+      }
+      .section-head {
+        max-width: 600px;
+        margin-bottom: 56px;
+      }
+      .section-head.centered {
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .section-eyebrow {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--accent);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+      .section-title {
+        font-size: clamp(30px, 3.5vw, 44px);
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin-bottom: 16px;
+        line-height: 1.15;
+        color: var(--text);
+      }
+      .section-sub {
+        font-size: 17px;
+        color: var(--text2);
+        line-height: 1.7;
+      }
+
+      /* ── FEATURES ── */
+      #features {
+        background: var(--bg);
+      }
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .feat {
+        padding: 36px 32px;
+        background: var(--surface);
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--r);
+        border: 1px solid var(--border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .feat:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(14, 165, 233, 0.1);
+        border-color: rgba(14, 165, 233, 0.2);
+      }
+      .feat::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent), var(--accent3));
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .feat:hover::before {
+        opacity: 1;
+      }
+      .feat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: linear-gradient(
+          135deg,
+          var(--accent-glow),
+          rgba(56, 189, 248, 0.1)
+        );
+        border: 1.5px solid rgba(14, 165, 233, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 20px;
+      }
+      .feat-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: -0.01em;
+        color: var(--text);
+      }
+      .feat-desc {
+        font-size: 14px;
+        color: var(--text2);
+        line-height: 1.6;
+      }
+
+      /* ── PRICING ── */
+      #pricing {
+        background: linear-gradient(180deg, var(--bg2), var(--bg));
+      }
+      .pricing-card {
+        max-width: 460px;
+        margin: 0 auto;
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 24px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.06);
+      }
+      .pricing-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--accent),
+          var(--accent3),
+          var(--accent)
+        );
+      }
+      .pricing-header {
+        padding: 40px 40px 32px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+      .pricing-badge {
+        display: inline-flex;
+        padding: 6px 16px;
+        border-radius: 20px;
+        background: var(--accent-glow);
+        border: 1.5px solid rgba(14, 165, 233, 0.15);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--accent2);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+      .pricing-name {
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      .pricing-desc {
+        font-size: 15px;
+        color: var(--text2);
+      }
+      .pricing-price {
+        padding: 32px 40px;
+        border-bottom: 1px solid var(--border);
+        text-align: center;
+      }
+      .pricing-amount {
+        font-size: 56px;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        letter-spacing: -0.02em;
+      }
+      .pricing-amount span {
+        font-size: 24px;
+        font-weight: 700;
+        vertical-align: super;
+        margin-right: 4px;
+        -webkit-text-fill-color: var(--accent2);
+      }
+      .pricing-period {
+        font-size: 14px;
+        color: var(--text2);
+        margin-top: 8px;
+        font-weight: 500;
+      }
+      .pricing-features {
+        padding: 32px 40px;
+        border-bottom: 1px solid var(--border);
+      }
+      .pricing-feature {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        color: var(--text2);
+        margin-bottom: 14px;
+      }
+      .pricing-feature:last-child {
+        margin-bottom: 0;
+      }
+      .pricing-feature::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--green-light);
+        color: var(--green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 700;
+        flex-shrink: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      .pricing-footer {
+        padding: 32px 40px;
+      }
+      .pricing-cta {
+        width: 100%;
+        padding: 16px;
+        border-radius: var(--r);
+        border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        cursor: pointer;
+        font-size: 15px;
+        font-family: var(--f);
+        font-weight: 700;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+      }
+      .pricing-cta:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 28px rgba(14, 165, 233, 0.4);
+      }
+      .pricing-note {
+        font-size: 13px;
+        color: var(--text3);
+        text-align: center;
+        margin-top: 14px;
+        font-weight: 500;
+      }
+
+      /* ── HOW ── */
+      #how {
+        background: var(--bg);
+      }
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0;
+        position: relative;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .steps::before {
+        content: "";
+        position: absolute;
+        top: 32px;
+        left: 12%;
+        right: 12%;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--border),
+          var(--border),
+          transparent
+        );
+        z-index: 0;
+      }
+      .step {
+        text-align: center;
+        padding: 0 20px;
+        position: relative;
+        z-index: 1;
+      }
+      .step-num {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 2px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--accent);
+        margin: 0 auto 20px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      }
+      .step:hover .step-num {
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-color: var(--accent);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
+      }
+      .step-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: -0.01em;
+        color: var(--text);
+      }
+      .step-desc {
+        font-size: 14px;
+        color: var(--text2);
+        line-height: 1.6;
+      }
+
+      /* ── TESTIMONIALS ── */
+      #testimonials {
+        background: linear-gradient(180deg, var(--bg2), var(--bg));
+      }
+      .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .testimonial {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: var(--r);
+        padding: 32px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s;
+      }
+      .testimonial:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(14, 165, 233, 0.08);
+      }
+      .testimonial-stars {
+        color: #f59e0b;
+        font-size: 16px;
+        letter-spacing: 2px;
+        margin-bottom: 16px;
+      }
+      .testimonial-text {
+        font-size: 15px;
+        color: var(--text2);
+        line-height: 1.7;
+        margin-bottom: 20px;
+        font-style: italic;
+      }
+      .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .testimonial-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent3));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 16px;
+      }
+      .testimonial-info {
+      }
+      .testimonial-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .testimonial-location {
+        font-size: 12px;
+        color: var(--text3);
+        font-weight: 500;
+      }
+
+      /* ── CTA SECTION ── */
+      #cta {
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        padding: 80px 48px;
+        text-align: center;
+      }
+      .cta-title {
+        font-size: clamp(28px, 3vw, 40px);
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -0.02em;
+        margin-bottom: 16px;
+      }
+      .cta-sub {
+        font-size: 17px;
+        color: rgba(255, 255, 255, 0.8);
+        max-width: 500px;
+        margin: 0 auto 32px;
+        line-height: 1.7;
+      }
+      .cta-btn {
+        padding: 16px 40px;
+        border-radius: var(--r);
+        border: none;
+        background: #fff;
+        color: var(--accent2);
+        cursor: pointer;
+        font-size: 16px;
+        font-family: var(--f);
+        font-weight: 700;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+      }
+      .cta-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      /* ── MODAL ── */
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+        backdrop-filter: blur(12px);
+      }
+      .overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .modal {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 24px;
+        padding: 0;
+        width: 460px;
+        max-width: 94vw;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: scale(0.95) translateY(12px);
+        transition: transform 0.25s;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
+      }
+      .overlay.open .modal {
+        transform: scale(1) translateY(0);
+      }
+      .modal-header {
+        padding: 28px 32px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .modal-title {
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+      .modal-close {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: var(--bg2);
+        border: none;
+        color: var(--text3);
+        cursor: pointer;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+      .modal-close:hover {
+        background: var(--border);
+        color: var(--text);
+      }
+      .modal-body {
+        padding: 24px 32px 32px;
+      }
+      .modal-tabs {
+        display: flex;
+        gap: 4px;
+        background: var(--bg2);
+        border-radius: var(--r2);
+        padding: 4px;
+        margin-bottom: 24px;
+      }
+      .mtab {
+        flex: 1;
+        padding: 10px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text3);
+        cursor: pointer;
+        font-size: 13px;
+        font-family: var(--f);
+        font-weight: 600;
+        transition: all 0.15s;
+      }
+      .mtab.active {
+        background: var(--surface);
+        color: var(--text);
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .fg {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .fg label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text2);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .fg input,
+      .fg select {
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: var(--r2);
+        padding: 12px 14px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: var(--f);
+        outline: none;
+        transition:
+          border-color 0.15s,
+          box-shadow 0.15s;
+        width: 100%;
+      }
+      .fg input:focus,
+      .fg select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+      }
+      .form-submit {
+        width: 100%;
+        padding: 14px;
+        border-radius: var(--r);
+        border: none;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        font-family: var(--f);
+        font-weight: 700;
+        transition: all 0.15s;
+        margin-top: 6px;
+        box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+      }
+      .form-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+      }
+      .form-divider {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0;
+      }
+      .form-divider::before,
+      .form-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .form-divider span {
+        font-size: 12px;
+        color: var(--text3);
+        white-space: nowrap;
+        font-weight: 500;
+      }
+      .payment-box {
+        background: var(--bg2);
+        border: 1.5px solid var(--border);
+        border-radius: var(--r);
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+      .payment-amount {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .payment-amount-label {
+        font-size: 14px;
+        color: var(--text2);
+        font-weight: 500;
+      }
+      .payment-amount-val {
+        font-family: var(--f);
+        font-size: 24px;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .payment-method {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .pm-btn {
+        flex: 1;
+        padding: 12px;
+        border-radius: var(--r2);
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        color: var(--text3);
+        cursor: pointer;
+        font-size: 13px;
+        font-family: var(--f);
+        font-weight: 600;
+        transition: all 0.15s;
+        text-align: center;
+      }
+      .pm-btn.active {
+        background: var(--accent-glow);
+        border-color: var(--accent);
+        color: var(--accent);
+        box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+      }
+      .mpesa-steps {
+        font-size: 13px;
+        color: var(--text2);
+        line-height: 1.8;
+        list-style-position: inside;
+        padding-left: 4px;
+      }
+      .mpesa-steps li {
+        margin-bottom: 6px;
+      }
+      .success-state {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .success-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--green-light);
+        border: 2px solid var(--green);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        margin: 0 auto 20px;
+      }
+      .error-msg {
+        background: var(--red-light);
+        border: 1.5px solid rgba(239, 68, 68, 0.2);
+        border-radius: var(--r2);
+        padding: 12px 16px;
+        font-size: 13px;
+        color: var(--red);
+        margin-bottom: 16px;
+        display: none;
+        font-weight: 500;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        background: var(--bg2);
+        border-top: 1.5px solid var(--border);
+        padding: 60px 48px 32px;
+      }
+      .footer-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 48px;
+        margin-bottom: 48px;
+        max-width: 1200px;
+        margin: 0 auto 48px;
+      }
+      .footer-desc {
+        font-size: 14px;
+        color: var(--text2);
+        line-height: 1.7;
+        max-width: 280px;
+      }
+      .footer-col-title {
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text3);
+        margin-bottom: 16px;
+      }
+      .footer-links {
+        list-style: none;
+      }
+      .footer-links li {
+        margin-bottom: 12px;
+      }
+      .footer-links a {
+        font-size: 14px;
+        color: var(--text2);
+        text-decoration: none;
+        transition: color 0.15s;
+        font-weight: 500;
+      }
+      .footer-links a:hover {
+        color: var(--accent);
+      }
+      .footer-bottom {
+        border-top: 1.5px solid var(--border);
+        padding-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .footer-copy {
+        font-size: 13px;
+        color: var(--text3);
+        font-weight: 500;
+      }
+      .footer-tag {
+        font-size: 13px;
+        color: var(--text3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+      }
+
+      /* ── TOAST ── */
+      .toast-wrap {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .toast {
+        padding: 14px 20px;
+        border-radius: var(--r2);
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 320px;
+        animation: toastIn 0.3s ease;
+        border-left: 4px solid currentColor;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      }
+      .toast.success {
+        background: #f0fdf4;
+        color: #15803d;
+        border-left-color: #22c55e;
+      }
+      .toast.error {
+        background: #fef2f2;
+        color: #b91c1c;
+        border-left-color: #ef4444;
+      }
+      .toast.info {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-left-color: #3b82f6;
+      }
+      @keyframes toastIn {
+        from {
+          transform: translateX(110%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 1024px) {
+        nav {
+          padding: 14px 32px;
+        }
+        section {
+          padding: 80px 32px;
+        }
+        .features-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .testimonials-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .steps {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 40px;
+        }
+        .steps::before {
+          display: none;
+        }
+        .footer-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          max-width: 100%;
+        }
+        .footer-bottom {
+          max-width: 100%;
+        }
+      }
+      @media (max-width: 640px) {
+        nav {
+          padding: 12px 20px;
+        }
+        .nav-links {
+          display: none;
+        }
+        #hero {
+          padding: 120px 24px 60px;
+        }
+        section {
+          padding: 60px 24px;
+        }
+        h1 {
+          font-size: 34px;
+        }
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+        .testimonials-grid {
+          grid-template-columns: 1fr;
+        }
+        .steps {
+          grid-template-columns: 1fr;
+        }
+        .hero-stats {
+          gap: 24px;
+        }
+        .footer-grid {
+          grid-template-columns: 1fr;
+        }
+        footer {
+          padding: 48px 24px 24px;
+        }
+        .footer-bottom {
+          flex-direction: column;
+          gap: 12px;
+          text-align: center;
+        }
+      }
+    </style>
+    <base target="_blank" />
+    <base target="_blank" />
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav id="navbar">
+      <a class="nav-logo" href="#">
+        <div class="nav-logo-mark">💊</div>
+        <div>
+          <div class="nav-logo-text">Uza Pap POS</div>
+          <div class="nav-logo-sub">Pharmacy Edition</div>
+        </div>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#how">How it works</a>
+        <a href="#testimonials">Reviews</a>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <a class="btn btn-ghost" href="#" onclick="openModal('login')"
+          >Sign In</a
+        >
+        <a class="btn btn-primary" href="#" onclick="openModal('register')"
+          >Get Started</a
+        >
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-glow"></div>
+      <div class="hero-content">
+        <div class="hero-badge">Built for Kenya · M-Pesa Ready</div>
+        <h1>
+          Pharmacy software<br />that <span class="accent">just works</span>
+        </h1>
+        <p class="hero-sub">
+          Sales, stock, expiry alerts, and M-Pesa payments — all in one place.
+          No setup, no hardware.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-hero" onclick="openModal('register')">
+            Start for KES 300 →
+          </button>
+          <a class="btn-hero-outline" href="#features">See features</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-val" data-count="300">KES 300</div>
+            <div class="hero-stat-label">Per month</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val">M-Pesa</div>
+            <div class="hero-stat-label">Built-in</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-val">24/7</div>
+            <div class="hero-stat-label">Cloud access</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="section-head centered">
+        <div class="section-eyebrow">Everything you need</div>
+        <h2 class="section-title">Built for Kenyan pharmacies</h2>
+        <p class="section-sub">
+          No bloat. Just the tools you actually use every day.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feat">
+          <div class="feat-icon">🛒</div>
+          <div class="feat-title">Point of Sale</div>
+          <div class="feat-desc">
+            Fast checkout, cart management, receipt generation. Cash, M-Pesa,
+            card.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">📱</div>
+          <div class="feat-title">M-Pesa STK Push</div>
+          <div class="feat-desc">
+            Send payment prompts directly to customers' phones. No till numbers.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">📦</div>
+          <div class="feat-title">Stock Management</div>
+          <div class="feat-desc">
+            Track batches, costs, prices, expiry dates. FEFO dispensing.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">🔔</div>
+          <div class="feat-title">Smart Alerts</div>
+          <div class="feat-desc">
+            Low stock, out-of-stock, and expiry alerts. Never miss anything.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">👥</div>
+          <div class="feat-title">Patient Registry</div>
+          <div class="feat-desc">
+            Customer records, purchase history, insurance, loyalty.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">📋</div>
+          <div class="feat-title">Prescriptions</div>
+          <div class="feat-desc">
+            Link prescriptions to sales. Prescriber details, compliance.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">📊</div>
+          <div class="feat-title">Reports</div>
+          <div class="feat-desc">
+            Daily revenue, top sellers, sales summaries, full audit trail.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">🏭</div>
+          <div class="feat-title">Suppliers</div>
+          <div class="feat-desc">
+            Manage suppliers, purchase orders, stock receiving.
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">👤</div>
+          <div class="feat-title">Staff Roles</div>
+          <div class="feat-desc">
+            Admin, pharmacist, cashier. Role-based access. Full audit log.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing">
+      <div class="section-head centered">
+        <div class="section-eyebrow">Simple pricing</div>
+        <h2 class="section-title">One plan. Everything included.</h2>
+        <p class="section-sub">
+          No hidden fees. No per-user charges. One flat rate.
+        </p>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-header">
+          <div class="pricing-badge">Monthly Plan</div>
+          <div class="pricing-name">Uza Pap Pro</div>
+          <div class="pricing-desc">Full access. Cancel anytime.</div>
+        </div>
+        <div class="pricing-price">
+          <div class="pricing-amount"><span>KES</span>300</div>
+          <div class="pricing-period">per month · billed via M-Pesa</div>
+        </div>
+        <div class="pricing-features">
+          <div class="pricing-feature">Unlimited sales transactions</div>
+          <div class="pricing-feature">Full inventory & stock management</div>
+          <div class="pricing-feature">M-Pesa STK Push payments</div>
+          <div class="pricing-feature">Patient registry & prescriptions</div>
+          <div class="pricing-feature">Smart stock & expiry alerts</div>
+          <div class="pricing-feature">Reports, dashboard & audit trail</div>
+          <div class="pricing-feature">Unlimited staff accounts</div>
+          <div class="pricing-feature">WHO Essential Medicines catalogue</div>
+          <div class="pricing-feature">Cloud-hosted, anywhere access</div>
+        </div>
+        <div class="pricing-footer">
+          <button class="pricing-cta" onclick="openModal('register')">
+            📱 Pay KES 300 via M-Pesa
+          </button>
+          <div class="pricing-note">Secure M-Pesa payment · Instant access</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how">
+      <div class="section-head centered">
+        <div class="section-eyebrow">Getting started</div>
+        <h2 class="section-title">Up and running in minutes</h2>
+        <p class="section-sub">
+          No installation. No hardware. Just a browser and M-Pesa.
+        </p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div class="step-title">Create account</div>
+          <div class="step-desc">
+            Register with your name, pharmacy, and email.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div class="step-title">Pay KES 300</div>
+          <div class="step-desc">M-Pesa STK Push. Enter PIN on your phone.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div class="step-title">Set up</div>
+          <div class="step-desc">
+            Add medicines, prices, staff. ~10 minutes.
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div class="step-title">Start selling</div>
+          <div class="step-desc">
+            Open POS from any browser. Sell immediately.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section id="testimonials">
+      <div class="section-head centered">
+        <div class="section-eyebrow">Trusted by pharmacies</div>
+        <h2 class="section-title">Loved by Kenyan pharmacists</h2>
+        <p class="section-sub">
+          See what pharmacy owners are saying about Uza Pap POS.
+        </p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-text">
+            "I used to track everything in Excel. Now my stock updates
+            automatically. The expiry alerts alone have saved me thousands of
+            shillings."
+          </div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">JM</div>
+            <div class="testimonial-info">
+              <div class="testimonial-name">James Mwangi</div>
+              <div class="testimonial-location">📍 Nairobi</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-text">
+            "The M-Pesa integration is seamless. My customers love getting STK
+            prompts. Payments are instant and I get receipts automatically."
+          </div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">WO</div>
+            <div class="testimonial-info">
+              <div class="testimonial-name">Wanjiku Ochieng</div>
+              <div class="testimonial-location">📍 Kisumu</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-text">
+            "KES 300 a month is nothing compared to what I was paying for my old
+            system. And this one actually works on my phone too!"
+          </div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">PK</div>
+            <div class="testimonial-info">
+              <div class="testimonial-name">Peter Kamau</div>
+              <div class="testimonial-location">📍 Nakuru</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-text">
+            "The patient registry helps me track repeat customers and their
+            insurance details. My staff picked it up in one day — it's that
+            simple."
+          </div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">AN</div>
+            <div class="testimonial-info">
+              <div class="testimonial-name">Amina Njoroge</div>
+              <div class="testimonial-location">📍 Mombasa</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-text">
+            "I can check my sales from home. The daily reports tell me exactly
+            what sold, what's running low, and what profit I made. Brilliant."
+          </div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">DO</div>
+            <div class="testimonial-info">
+              <div class="testimonial-name">David Omondi</div>
+              <div class="testimonial-location">📍 Eldoret</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-text">
+            "We switched from a competitor that cost 5x more. Uza Pap has
+            everything we need and the support team responds within minutes."
+          </div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">SK</div>
+            <div class="testimonial-info">
+              <div class="testimonial-name">Sarah Kimani</div>
+              <div class="testimonial-location">📍 Thika</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="cta">
+      <div class="cta-title">Ready to transform your pharmacy?</div>
+      <div class="cta-sub">
+        Join hundreds of Kenyan pharmacies already using Uza Pap POS.
+      </div>
+      <button class="cta-btn" onclick="openModal('register')">
+        Get Started — KES 300/month →
+      </button>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div class="footer-grid">
+        <div>
+          <div class="nav-logo" style="margin-bottom: 14px">
+            <div class="nav-logo-mark">💊</div>
+            <div>
+              <div class="nav-logo-text">Uza Pap POS</div>
+              <div class="nav-logo-sub">Pharmacy Edition</div>
+            </div>
+          </div>
+          <p class="footer-desc">
+            Professional pharmacy management for Kenyan pharmacies. Affordable,
+            fast, reliable.
+          </p>
+        </div>
+        <div>
+          <div class="footer-col-title">Product</div>
+          <ul class="footer-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#" onclick="openModal('login')">Sign In</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Privacy</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Support</div>
+          <ul class="footer-links">
+            <li><a href="#">Help Centre</a></li>
+            <li>
+              <a href="mailto:support@uzapap.co.ke">support@uzapap.co.ke</a>
+            </li>
+            <li><a href="tel:+254700000000">+254 700 000 000</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Uza Pap POS</div>
+        <div class="footer-tag">🇰🇪 Made in Kenya</div>
+      </div>
+    </footer>
+
+    <!-- MODAL -->
+    <div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+      <div class="modal" id="modal-box">
+        <div class="modal-header">
+          <div class="modal-title" id="modal-title">Get Started</div>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-tabs" id="modal-tabs">
+            <button class="mtab active" onclick="switchTab('register')">
+              Create Account
+            </button>
+            <button class="mtab" onclick="switchTab('login')">Sign In</button>
+          </div>
+
+          <!-- REGISTER -->
+          <div class="tab-content active" id="tab-register">
+            <div id="register-error" class="error-msg"></div>
+            <div id="reg-step1">
+              <div class="fg">
+                <label>Full Name</label>
+                <input type="text" id="reg-name" placeholder="Your name" />
+              </div>
+              <div class="fg">
+                <label>Pharmacy Name</label>
+                <input
+                  type="text"
+                  id="reg-pharmacy"
+                  placeholder="e.g. Mama Njeri Pharmacy"
+                />
+              </div>
+              <div class="fg">
+                <label>Email</label>
+                <input
+                  type="email"
+                  id="reg-email"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div class="fg">
+                <label>Password</label>
+                <input
+                  type="password"
+                  id="reg-pass"
+                  placeholder="Min 8 chars"
+                />
+              </div>
+              <div class="fg">
+                <label>M-Pesa Phone</label>
+                <input type="tel" id="reg-phone" placeholder="07XXXXXXXX" />
+              </div>
+              <button class="form-submit" onclick="proceedToPayment()">
+                Continue →
+              </button>
+            </div>
+            <div id="reg-step2" style="display: none">
+              <div style="margin-bottom: 20px">
+                <div
+                  style="
+                    font-size: 13px;
+                    color: var(--text2);
+                    margin-bottom: 4px;
+                  "
+                >
+                  Paying as
+                </div>
+                <div
+                  style="font-size: 15px; font-weight: 700; color: var(--text)"
+                  id="pay-name-display"
+                >
+                  —
+                </div>
+              </div>
+              <div class="payment-box">
+                <div class="payment-amount">
+                  <div class="payment-amount-label">Monthly</div>
+                  <div class="payment-amount-val">KES 300</div>
+                </div>
+                <div
+                  style="
+                    font-size: 13px;
+                    color: var(--text2);
+                    margin-bottom: 14px;
+                    font-weight: 600;
+                  "
+                >
+                  Payment method
+                </div>
+                <div class="payment-method">
+                  <div
+                    class="pm-btn active"
+                    onclick="selectPayMethod('mpesa', this)"
+                  >
+                    📱 M-Pesa
+                  </div>
+                  <div class="pm-btn" onclick="selectPayMethod('card', this)">
+                    💳 Card
+                  </div>
+                </div>
+                <div id="mpesa-instructions">
+                  <div
+                    style="
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: var(--text);
+                      margin-bottom: 10px;
+                    "
+                  >
+                    How it works:
+                  </div>
+                  <ol class="mpesa-steps">
+                    <li>Click "Pay Now"</li>
+                    <li>
+                      Receive STK prompt on
+                      <strong id="pay-phone-display">your phone</strong>
+                    </li>
+                    <li>Enter M-Pesa PIN</li>
+                    <li>Instant access</li>
+                  </ol>
+                </div>
+                <div id="card-instructions" style="display: none">
+                  <div class="fg">
+                    <label>Card Number</label>
+                    <input
+                      type="text"
+                      placeholder="1234 5678 9012 3456"
+                      maxlength="19"
+                    />
+                  </div>
+                  <div
+                    style="
+                      display: grid;
+                      grid-template-columns: 1fr 1fr;
+                      gap: 12px;
+                    "
+                  >
+                    <div class="fg">
+                      <label>Expiry</label>
+                      <input type="text" placeholder="MM/YY" maxlength="5" />
+                    </div>
+                    <div class="fg">
+                      <label>CVV</label>
+                      <input type="text" placeholder="123" maxlength="3" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button
+                class="form-submit"
+                id="pay-btn"
+                onclick="processPayment()"
+              >
+                📱 Pay KES 300 via M-Pesa
+              </button>
+              <div style="text-align: center; margin-top: 12px">
+                <button
+                  onclick="backToStep1()"
+                  style="
+                    background: none;
+                    border: none;
+                    color: var(--text3);
+                    font-size: 13px;
+                    cursor: pointer;
+                    font-weight: 500;
+                  "
+                >
+                  ← Back
+                </button>
+              </div>
+            </div>
+            <div
+              id="reg-step3"
+              style="display: none; text-align: center; padding: 20px 0"
+            >
+              <div
+                style="
+                  width: 72px;
+                  height: 72px;
+                  border-radius: 50%;
+                  background: var(--accent-glow);
+                  border: 2px solid var(--accent);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 32px;
+                  margin: 0 auto 20px;
+                  animation: pulse 1.5s infinite;
+                "
+              >
+                📱
+              </div>
+              <div
+                style="
+                  font-size: 17px;
+                  font-weight: 800;
+                  margin-bottom: 8px;
+                  color: var(--text);
+                "
+              >
+                Waiting for payment
+              </div>
+              <div
+                style="
+                  font-size: 14px;
+                  color: var(--text2);
+                  margin-bottom: 20px;
+                "
+              >
+                Check your phone — enter M-Pesa PIN
+              </div>
+              <div
+                style="
+                  background: var(--bg2);
+                  border-radius: var(--r2);
+                  padding: 12px 16px;
+                  font-size: 13px;
+                  color: var(--text2);
+                  display: inline-block;
+                  font-weight: 500;
+                "
+              >
+                ⏱ Expires in
+                <span
+                  id="pay-countdown"
+                  style="font-weight: 800; color: var(--accent)"
+                  >60</span
+                >s
+              </div>
+            </div>
+            <div id="reg-step4" style="display: none">
+              <div class="success-state">
+                <div class="success-icon">✅</div>
+                <div
+                  style="
+                    font-size: 20px;
+                    font-weight: 800;
+                    color: var(--green);
+                    margin-bottom: 8px;
+                  "
+                >
+                  Payment confirmed!
+                </div>
+                <div
+                  style="
+                    font-size: 14px;
+                    color: var(--text2);
+                    margin-bottom: 24px;
+                  "
+                >
+                  Account active. Sign in to access.
+                </div>
+                <div
+                  style="
+                    background: var(--bg2);
+                    border: 1.5px solid var(--border);
+                    border-radius: var(--r2);
+                    padding: 16px;
+                    margin-bottom: 24px;
+                    font-size: 14px;
+                    text-align: left;
+                  "
+                >
+                  <div
+                    style="
+                      color: var(--text2);
+                      margin-bottom: 6px;
+                      font-weight: 500;
+                    "
+                  >
+                    M-Pesa Receipt
+                  </div>
+                  <div
+                    style="
+                      font-family: var(--f);
+                      font-weight: 800;
+                      color: var(--accent);
+                      font-size: 16px;
+                    "
+                    id="mpesa-receipt-display"
+                  >
+                    —
+                  </div>
+                </div>
+                <button class="form-submit" onclick="goToSystemAfterPayment()">
+                  Enter Uza Pap POS →
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LOGIN -->
+          <div class="tab-content" id="tab-login">
+            <div id="login-error" class="error-msg"></div>
+            <div class="fg">
+              <label>Email</label>
+              <input type="email" id="li-email" placeholder="you@example.com" />
+            </div>
+            <div class="fg">
+              <label>Password</label>
+              <input type="password" id="li-pass" placeholder="••••••••" />
+            </div>
+            <button class="form-submit" onclick="doLogin()">Sign In →</button>
+            <div class="form-divider"><span>New here?</span></div>
+            <button
+              onclick="switchTab('register')"
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: var(--r2);
+                border: 1.5px solid var(--border);
+                background: transparent;
+                color: var(--text2);
+                cursor: pointer;
+                font-size: 13px;
+                font-family: var(--f);
+                font-weight: 600;
+                transition: all 0.15s;
+              "
+              onmouseover="
+                this.style.borderColor = 'var(--accent)';
+                this.style.color = 'var(--accent)';
+              "
+              onmouseout="
+                this.style.borderColor = 'var(--border)';
+                this.style.color = 'var(--text2)';
+              "
+            >
+              Create account — KES 300/month
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-wrap" id="toasts"></div>
+
+    <script>
+      // When served from FastAPI on the same domain, relative paths work.
+      const API =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+          ? "http://localhost:8000"
+          : "";
+      const ORIGIN = window.location.origin;
+
+      function toast(msg, type = "info", ms = 4000) {
+        const w = document.getElementById("toasts");
+        const t = document.createElement("div");
+        t.className = `toast ${type}`;
+        t.innerHTML = `<span>${{ success: "✅", error: "❌", info: "ℹ️" }[type] || "ℹ️"}</span><span>${msg}</span>`;
+        w.appendChild(t);
+        setTimeout(() => (t.style.opacity = "0"), ms - 400);
+        setTimeout(() => t.remove(), ms);
+      }
+
+      function openModal(mode) {
+        document.getElementById("modal-overlay").classList.add("open");
+        if (mode === "login") switchTab("login");
+        else switchTab("register");
+      }
+      function closeModal() {
+        document.getElementById("modal-overlay").classList.remove("open");
+      }
+      function handleOverlayClick(e) {
+        if (e.target === document.getElementById("modal-overlay")) closeModal();
+      }
+      function switchTab(tab) {
+        document.querySelectorAll(".mtab").forEach((t, i) => {
+          t.classList.toggle(
+            "active",
+            (tab === "register" && i === 0) || (tab === "login" && i === 1),
+          );
+        });
+        document
+          .getElementById("tab-register")
+          .classList.toggle("active", tab === "register");
+        document
+          .getElementById("tab-login")
+          .classList.toggle("active", tab === "login");
+        document.getElementById("modal-title").textContent =
+          tab === "register" ? "Create Account" : "Sign In";
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
+
+      let payMethod = "mpesa";
+      let countdownTimer = null;
+
+      function showRegError(msg) {
+        const el = document.getElementById("register-error");
+        el.textContent = msg;
+        el.style.display = "block";
+        setTimeout(() => (el.style.display = "none"), 5000);
+      }
+      function proceedToPayment() {
+        const name = document.getElementById("reg-name").value.trim();
+        const pharm = document.getElementById("reg-pharmacy").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const pass = document.getElementById("reg-pass").value;
+        const phone = document.getElementById("reg-phone").value.trim();
+        if (!name) {
+          showRegError("Enter your full name");
+          return;
+        }
+        if (!pharm) {
+          showRegError("Enter pharmacy name");
+          return;
+        }
+        if (!email.includes("@")) {
+          showRegError("Enter a valid email");
+          return;
+        }
+        if (pass.length < 8) {
+          showRegError("Password must be at least 8 characters");
+          return;
+        }
+        if (!phone) {
+          showRegError("Enter M-Pesa phone number");
+          return;
+        }
+        document.getElementById("pay-name-display").textContent =
+          `${name} — ${pharm}`;
+        document.getElementById("pay-phone-display").textContent = phone;
+        document.getElementById("reg-step1").style.display = "none";
+        document.getElementById("reg-step2").style.display = "block";
+        document.getElementById("register-error").style.display = "none";
+      }
+      function backToStep1() {
+        document.getElementById("reg-step1").style.display = "block";
+        document.getElementById("reg-step2").style.display = "none";
+      }
+      function selectPayMethod(method, btn) {
+        payMethod = method;
+        document
+          .querySelectorAll(".pm-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("mpesa-instructions").style.display =
+          method === "mpesa" ? "block" : "none";
+        document.getElementById("card-instructions").style.display =
+          method === "card" ? "block" : "none";
+        document.getElementById("pay-btn").textContent =
+          method === "mpesa"
+            ? "📱 Pay KES 300 via M-Pesa"
+            : "💳 Pay KES 300 by Card";
+      }
+      function processPayment() {
+        document.getElementById("reg-step2").style.display = "none";
+        document.getElementById("reg-step3").style.display = "block";
+        let secs = 60;
+        const cdEl = document.getElementById("pay-countdown");
+        countdownTimer = setInterval(() => {
+          secs--;
+          cdEl.textContent = secs;
+          if (secs <= 0) {
+            clearInterval(countdownTimer);
+            document.getElementById("reg-step3").style.display = "none";
+            document.getElementById("reg-step2").style.display = "block";
+            showRegError("Payment timed out. Try again.");
+          }
+        }, 1000);
+        setTimeout(() => {
+          clearInterval(countdownTimer);
+          const fakeReceipt =
+            "QJ" + Math.random().toString(36).substr(2, 8).toUpperCase();
+          document.getElementById("reg-step3").style.display = "none";
+          document.getElementById("reg-step4").style.display = "block";
+          document.getElementById("mpesa-receipt-display").textContent =
+            fakeReceipt;
+          toast("Payment confirmed! Welcome.", "success", 6000);
+        }, 4000);
+      }
+      function goToSystemAfterPayment() {
+        window.location.href = "https://flex-pharmacy-pos.onrender.com/app";
+      }
+
+      function showLoginError(msg) {
+        const el = document.getElementById("login-error");
+        el.textContent = msg;
+        el.style.display = "block";
+        setTimeout(() => (el.style.display = "none"), 5000);
+      }
+      async function doLogin() {
+        const email = document.getElementById("li-email").value.trim();
+        const pass = document.getElementById("li-pass").value;
+        if (!email || !pass) {
+          showLoginError("Enter email and password");
+          return;
+        }
+        try {
+          const r = await fetch(API + "/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password: pass }),
+          });
+          const d = await r.json();
+          if (!r.ok) {
+            showLoginError(d.message || d.detail || "Invalid credentials");
+            return;
+          }
+          localStorage.setItem("pos_token", d.access_token);
+          if (d.refresh_token)
+            localStorage.setItem("pos_refresh_token", d.refresh_token);
+          toast("Signing in...", "success", 2000);
+          setTimeout(() => {
+            window.location.href = "https://flex-pharmacy-pos.onrender.com/app";
+          }, 1000);
+        } catch (e) {
+          showLoginError("Could not reach server.");
+        }
+      }
+      document.getElementById("li-pass")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+      });
+
+      window.addEventListener("scroll", () => {
+        const nav = document.getElementById("navbar");
+        if (window.scrollY > 40) {
+          nav.style.padding = "12px 48px";
+          nav.style.background = "rgba(255,255,255,.95)";
+          nav.style.boxShadow = "0 1px 12px rgba(0,0,0,.05)";
+        } else {
+          nav.style.padding = "16px 48px";
+          nav.style.background = "rgba(255,255,255,.85)";
+          nav.style.boxShadow = "none";
+        }
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.style.opacity = "1";
+              e.target.style.transform = "translateY(0)";
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+      document.querySelectorAll(".feat, .step, .testimonial").forEach((el) => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(24px)";
+        el.style.transition = "opacity .6s ease, transform .6s ease";
+        observer.observe(el);
+      });
+    </script>
+  </body>
+</html>
