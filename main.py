@@ -158,19 +158,14 @@ app.include_router(payments_router)
 
 # ── Security middleware ────────────────────────────────────────────────────────
 
-# CORS – tighten allowed_origins for production
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",           # Local dev frontend
-    "http://localhost:5173",         # Vite dev server
-    "http://localhost:58506",
-     "http://localhost:63342",
-    "https://pos.kaziflex.com",        # Production frontend
-]
+# CORS – uses ALLOWED_ORIGINS from config.py (env var or .env)
+# In DEBUG mode any origin is allowed; in production only explicit origins.
+allowed_origins = settings.ALLOWED_ORIGINS if not settings.DEBUG else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS if not settings.DEBUG else ["*"],
-    allow_credentials=True,            # Now safe because origins are explicit
+    allow_origins=allowed_origins,
+    allow_credentials=not settings.DEBUG,  # Credentials only with explicit origins
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
@@ -178,7 +173,7 @@ app.add_middleware(
 if not settings.DEBUG:
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["pos.kaziflex.com", "api.kaziflex.com","flex-pharmacy-pos.onrender.com", "localhost"],
+        allowed_hosts=settings.TRUSTED_HOSTS,
     )
 
 
