@@ -1912,12 +1912,12 @@
     <div class="toast-wrap" id="toasts"></div>
 
     <script>
-      // When served from FastAPI on the same domain, relative paths work.
+      // ── API base URL ──
       const API =
         window.location.hostname === "localhost" ||
         window.location.hostname === "127.0.0.1"
           ? "http://localhost:8000"
-          : "";
+          : "https://pos-backend-ht23.onrender.com";
       const ORIGIN = window.location.origin;
 
       function toast(msg, type = "info", ms = 4000) {
