@@ -2048,8 +2048,53 @@
           toast("Payment confirmed! Welcome.", "success", 6000);
         }, 4000);
       }
-      function goToSystemAfterPayment() {
-        window.location.href = "https://pos-backend-ht23.onrender.com/app";
+      async function goToSystemAfterPayment() {
+        const name = document.getElementById("reg-name").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const pass = document.getElementById("reg-pass").value;
+        const phone = document.getElementById("reg-phone").value.trim();
+
+        try {
+          const r = await fetch(API + "/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              full_name: name,
+              email: email,
+              password: pass,
+              phone: phone,
+            }),
+          });
+          const d = await r.json();
+          if (!r.ok) {
+            showRegError(d.message || d.detail || "Registration failed");
+            document.getElementById("reg-step4").style.display = "none";
+            document.getElementById("reg-step1").style.display = "block";
+            return;
+          }
+          toast("Account created! Signing in...", "success", 4000);
+          // Auto-login
+          const loginR = await fetch(API + "/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password: pass }),
+          });
+          const loginD = await loginR.json();
+          if (loginR.ok) {
+            localStorage.setItem("pos_token", loginD.access_token);
+            if (loginD.refresh_token)
+              localStorage.setItem("pos_refresh_token", loginD.refresh_token);
+            localStorage.setItem(
+              "pos_me",
+              JSON.stringify({ full_name: name, email, role: "admin" }),
+            );
+          }
+          window.location.href = "https://pos-backend-ht23.onrender.com/app";
+        } catch (e) {
+          showRegError("Could not reach server. Check your connection.");
+          document.getElementById("reg-step4").style.display = "none";
+          document.getElementById("reg-step1").style.display = "block";
+        }
       }
 
       function showLoginError(msg) {

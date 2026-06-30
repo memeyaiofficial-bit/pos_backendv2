@@ -22,7 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models.orm import AuditLog, User
+from models.orm import AuditLog, User, UserRole
 from schemas.schemas import (
     LoginIn, PasswordChangeIn, TokenOut, TokenRefreshIn, UserOut, UpdateCredentialsIn,
 )
@@ -40,9 +40,42 @@ limiter = Limiter(key_func=get_remote_address)
 
 from config import get_settings
 from pydantic import EmailStr
+from schemas.schemas import UserCreateIn, RegisterIn
 
 settings = get_settings()
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+@router.post("/register", status_code=201, summary="Register a new pharmacy account")
+def register(payload: RegisterIn, db: Session = Depends(get_db)):
+    """
+    Public registration endpoint. Creates a new admin user account.
+    Customers register from the landing page before making payment.
+    """
+    existing = db.query(User).filter(User.email == payload.email.lower()).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists",
+        )
+
+    user = User(
+        full_name=payload.full_name,
+        email=payload.email.lower(),
+        hashed_password=hash_password(payload.password),
+        role=UserRole.ADMIN,
+        phone=payload.phone,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "message": "Account created successfully",
+        "user_id": user.id,
+        "email": user.email,
+    }
 
 
 @router.post("/login", response_model=TokenOut, summary="Login with email + password")
