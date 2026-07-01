@@ -277,10 +277,13 @@ def normalise_phone(phone: str) -> str:
         phone = phone[1:]
     if phone.startswith("0"):
         phone = "254" + phone[1:]
+    elif len(phone) == 9 and phone.isdigit() and phone.startswith("1"):
+        phone = "254" + phone
 
-    if len(phone) != 12 or not phone.startswith("2547"):
+    if len(phone) != 12 or not phone.startswith("254"):
         raise ValueError(
-            f"Invalid Kenyan mobile number: '{phone}'. "
-            "Expected format: 07XXXXXXXX or 2547XXXXXXXX"
+            f"Invalid Kenyan phone number: '{phone}'. "
+            "Expected 07XXXXXXXX, 2547XXXXXXXX, or local 1XXXXXXXX number."
         )
+
     return phone
