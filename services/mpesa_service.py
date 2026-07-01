@@ -11,7 +11,6 @@ FLOW:
 """
 
 import base64
-import hashlib
 import logging
 from datetime import datetime, timezone
 from functools import lru_cache
@@ -86,15 +85,28 @@ def _generate_password() -> tuple[str, str]:
 
 def _get_transaction_type(shortcode: str) -> str:
     """
-    Infer the correct Daraja STK transaction type from the shortcode.
+    Infer the correct Daraja STK transaction type.
 
-    Till numbers typically start with 37 and require CustomerBuyGoodsOnline.
-    Paybill numbers typically start with 6 and require CustomerPayBillOnline.
+    If MPESA_TRANSACTION_TYPE is configured explicitly, use it.
+    Otherwise infer from shortcode prefix:
+      - 37xxxx Till numbers -> CustomerBuyGoodsOnline
+      - 6xxxxx Paybill numbers -> CustomerPayBillOnline
     """
+    explicit = settings.MPESA_TRANSACTION_TYPE
+    if explicit:
+        transaction_type = explicit.strip()
+        logger.info(
+            "Using explicit M-Pesa transaction type=%s from config",
+            transaction_type,
+        )
+        return transaction_type
+
     shortcode = shortcode.strip()
     if shortcode.startswith("37"):
+        logger.info("Inferred M-Pesa transaction type CustomerBuyGoodsOnline for shortcode=%s", shortcode)
         return "CustomerBuyGoodsOnline"
     if shortcode.startswith("6"):
+        logger.info("Inferred M-Pesa transaction type CustomerPayBillOnline for shortcode=%s", shortcode)
         return "CustomerPayBillOnline"
 
     logger.warning(
@@ -127,7 +139,7 @@ def stk_push(
         httpx.HTTPStatusError: on Safaricom API errors
         ValueError: if phone number format is invalid
     """
-    phone_number = _normalise_phone(phone_number)
+    phone_number = normalise_phone(phone_number)
     shortcode = settings.MPESA_SHORTCODE.strip()
     password, timestamp = _generate_password()
     token = get_access_token()
@@ -251,7 +263,7 @@ def parse_callback(body: dict) -> dict:
     }
 
 
-def _normalise_phone(phone: str) -> str:
+def normalise_phone(phone: str) -> str:
     """
     Convert any Kenyan phone format to 254XXXXXXXXX.
       07XXXXXXXX  → 2547XXXXXXXX

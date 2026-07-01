@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.orm import AuditLog, MpesaTransaction, MpesaStatus, Sale, SaleStatus
 from schemas.schemas import MpesaSTKPushIn, MpesaSTKPushOut, MpesaStatusOut
-from services.mpesa_service import stk_push, query_stk_status, parse_callback
+from services.mpesa_service import normalise_phone, stk_push, query_stk_status, parse_callback
 from utils.errors import safe_error
 from utils.security import get_current_user, require_admin_or_pharmacist
 from models.orm import User
@@ -58,11 +58,12 @@ def register_payment(
                 detail=f"M-Pesa declined the request: {error_detail}. Check your Daraja credentials (consumer key/secret, passkey, shortcode)."
             )
 
+        normalized_phone = normalise_phone(payload.phone_number)
         txn = MpesaTransaction(
             sale_id=None,
             checkout_request_id=result["CheckoutRequestID"],
             merchant_request_id=result["MerchantRequestID"],
-            phone_number=payload.phone_number,
+            phone_number=normalized_phone,
             amount=300,
             status=MpesaStatus.PENDING,
         )
@@ -139,8 +140,9 @@ def initiate_stk_push(
         amount_kes = int(sale.total_amount)  # M-Pesa only accepts whole KES
         reference = f"SALE-{sale.id}"
 
+        normalized_phone = normalise_phone(payload.phone_number)
         result = stk_push(
-            phone_number=payload.phone_number,
+            phone_number=normalized_phone,
             amount=amount_kes,
             account_reference=reference,
             description="Pharmacy payment",
@@ -151,7 +153,7 @@ def initiate_stk_push(
             sale_id=sale.id,
             checkout_request_id=result["CheckoutRequestID"],
             merchant_request_id=result["MerchantRequestID"],
-            phone_number=payload.phone_number,
+            phone_number=normalized_phone,
             amount=amount_kes,
             status=MpesaStatus.PENDING,
         )
