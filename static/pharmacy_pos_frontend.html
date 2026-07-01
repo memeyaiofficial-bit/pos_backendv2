@@ -3555,7 +3555,24 @@
           return;
         }
         const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-        const saleId = 0; // Will be created after payment confirmed
+
+        // Step 1: Create the sale first as COMPLETED with mpesa method
+        let sale;
+        try {
+          sale = await req("POST", "/sales", {
+            items: cart.map((i) => ({
+              medicine_id: i.id,
+              quantity: i.qty,
+              discount_pct: 0,
+            })),
+            payment_method: "mpesa",
+            amount_paid: parseFloat(total.toFixed(2)),
+            customer_id: custId || null,
+          });
+        } catch (e) {
+          toast("Could not create sale: " + e.message, "error", 6000);
+          return;
+        }
 
         // Show waiting step
         document.getElementById("mp-step1").classList.remove("visible");
@@ -3575,31 +3592,51 @@
         }, 1000);
 
         try {
-          // In real integration, you'd call /payments/mpesa/stk-push here
-          // For now simulate with a mock checkout ID
-          // const r = await req('POST', '/payments/mpesa/stk-push', { sale_id: saleId, phone_number: phone });
-          // mpesaCheckoutId = r.checkout_request_id;
-          // pollMpesaStatus(mpesaCheckoutId, cdTimer, total);
-
-          // DEMO MODE: simulate success after 4 seconds
-          setTimeout(() => {
-            clearInterval(cdTimer);
-            const fakeReceipt =
-              "QJ" + Math.random().toString(36).substr(2, 8).toUpperCase();
-            document.getElementById("mp-step2").classList.remove("visible");
-            document.getElementById("mp-step3").classList.add("visible");
-            document.getElementById("mp-receipt-code").textContent =
-              fakeReceipt;
-            document.getElementById("mp-receipt-amt").textContent =
-              "KES " + total.toFixed(2);
-            mpesaCheckoutId = fakeReceipt;
-          }, 4000);
+          const r = await req("POST", "/payments/mpesa/stk-push", {
+            sale_id: sale.id,
+            phone_number: phone,
+          });
+          mpesaCheckoutId = r.checkout_request_id;
+          pollMpesaStatus(mpesaCheckoutId, cdTimer, total, sale.receipt_number);
         } catch (e) {
           clearInterval(cdTimer);
+          // Sale was created but STK push failed — keep the sale
           document.getElementById("mp-step2").classList.remove("visible");
           document.getElementById("mp-step4").classList.add("visible");
-          document.getElementById("mp-fail-reason").textContent = e.message;
+          document.getElementById("mp-fail-reason").textContent =
+            e.message || "Could not send M-Pesa prompt. Sale already recorded.";
         }
+      }
+
+      function pollMpesaStatus(checkoutId, cdTimer, total, receiptNumber) {
+        mpesaPollTimer = setInterval(async () => {
+          try {
+            const r = await req("GET", `/payments/mpesa/${checkoutId}/status`);
+            if (r.status === "SUCCESS") {
+              clearInterval(mpesaPollTimer);
+              clearInterval(cdTimer);
+              document.getElementById("mp-step2").classList.remove("visible");
+              document.getElementById("mp-step3").classList.add("visible");
+              document.getElementById("mp-receipt-code").textContent =
+                r.mpesa_receipt || "—";
+              document.getElementById("mp-receipt-amt").textContent =
+                "KES " + total.toFixed(2);
+              mpesaCheckoutId = r.mpesa_receipt || checkoutId;
+              toast(
+                "✅ Sale " + receiptNumber + " — KES " + total.toFixed(2),
+                "success",
+                6000,
+              );
+            } else if (r.status === "FAILED") {
+              clearInterval(mpesaPollTimer);
+              clearInterval(cdTimer);
+              document.getElementById("mp-step2").classList.remove("visible");
+              document.getElementById("mp-step4").classList.add("visible");
+              document.getElementById("mp-fail-reason").textContent =
+                r.result_desc || "Payment failed";
+            }
+          } catch (e) {}
+        }, 3000);
       }
 
       function pollMpesaStatus(checkoutId, cdTimer, total) {
@@ -3642,9 +3679,12 @@
       }
 
       async function completeMpesaSale() {
-        const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
         closeMo("mo-mpesa");
-        await submitSale("mpesa", total, mpesaCheckoutId);
+        cart = [];
+        renderCart();
+        custId = null;
+        custName = null;
+        document.getElementById("cust-label").textContent = "Walk-in";
         resetMpesa();
       }
 

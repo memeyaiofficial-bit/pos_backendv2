@@ -29,6 +29,47 @@ router = APIRouter(prefix="/payments/mpesa", tags=["Payments"])
 
 # ── Initiate STK Push ─────────────────────────────────────────────────────────
 
+@router.post("/register-payment", response_model=MpesaSTKPushOut,
+             summary="Send KES 300 STK Push for new registration (no auth required)")
+def register_payment(
+    payload: MpesaSTKPushIn,
+    db: Session = Depends(get_db),
+):
+    """
+    Public endpoint (no auth) — sends STK Push for KES 300 registration fee.
+    No sale_id needed — the transaction is tracked independently.
+    (phone_number is in MpesaSTKPushIn.sale_id because the schema reuses that field)
+    """
+    try:
+        result = stk_push(
+            phone_number=payload.phone_number,
+            amount=300,
+            account_reference="REG-UZAPAP",
+            description="Pharmacy POS reg",
+        )
+
+        txn = MpesaTransaction(
+            sale_id=None,
+            checkout_request_id=result["CheckoutRequestID"],
+            merchant_request_id=result["MerchantRequestID"],
+            phone_number=payload.phone_number,
+            amount=300,
+            status=MpesaStatus.PENDING,
+        )
+        db.add(txn)
+        db.commit()
+        db.refresh(txn)
+
+        return MpesaSTKPushOut(
+            checkout_request_id=txn.checkout_request_id,
+            message="M-Pesa prompt sent for KES 300 registration. Enter PIN on your phone.",
+        )
+
+    except Exception as e:
+        db.rollback()
+        raise safe_error(e, "Could not send M-Pesa prompt.")
+
+
 @router.post("/stk-push", response_model=MpesaSTKPushOut,
              summary="Send M-Pesa payment prompt to customer")
 def initiate_stk_push(
@@ -204,15 +245,12 @@ async def mpesa_callback(request: Request, db: Session = Depends(get_db)):
             summary="Check payment status")
 def get_payment_status(
     checkout_request_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
-    Poll payment status. Call this every 5 seconds from the frontend
-    while waiting for the customer to enter their PIN.
-
-    If status is still PENDING after 60 seconds, query Safaricom directly
-    as a fallback (in case the callback was missed).
+    Authenticated — check M-Pesa payment status.
+    Poll every 5 seconds while waiting for customer PIN.
     """
     txn = (
         db.query(MpesaTransaction)
@@ -247,3 +285,46 @@ def get_payment_status(
         amount=txn.amount,
         result_desc=txn.result_desc,
     )
+
+
+@router.get("/{checkout_request_id}/status/public", response_model=MpesaStatusOut,
+            summary="Check payment status (no auth required)")
+def get_payment_status_public(
+    checkout_request_id: str,
+    db: Session = Depends(get_db),
+):
+    """
+    Public (no auth) — check M-Pesa payment status.
+    Used by the landing page registration flow.
+    """
+    txn = (
+        db.query(MpesaTransaction)
+        .filter(MpesaTransaction.checkout_request_id == checkout_request_id)
+        .first()
+    )
+    if not txn:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    if txn.status == MpesaStatus.PENDING:
+        age_seconds = (datetime.now(timezone.utc) - txn.created_at).total_seconds()
+        if age_seconds > 70:
+            try:
+                result = query_stk_status(checkout_request_id)
+                result_code = int(result.get("ResultCode", -1))
+                if result_code == 0:
+                    txn.status = MpesaStatus.SUCCESS
+                    txn.result_desc = result.get("ResultDesc")
+                elif result_code != 1032:
+                    txn.status = MpesaStatus.FAILED
+                    txn.result_desc = result.get("ResultDesc")
+                txn.updated_at = datetime.now(timezone.utc)
+                db.commit()
+            except Exception as e:
+                logger.warning("STK status query failed: %s", e)
+
+    return MpesaStatusOut(
+        checkout_request_id=txn.checkout_request_id,
+        status=txn.status,
+        mpesa_receipt=txn.mpesa_receipt,
+        amount=txn.amount,
+        result_desc=txn.result_desc,

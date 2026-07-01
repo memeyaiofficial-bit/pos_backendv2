@@ -2022,7 +2022,9 @@
             ? "📱 Pay KES 300 via M-Pesa"
             : "💳 Pay KES 300 by Card";
       }
-      function processPayment() {
+      let regCheckoutId = null;
+      async function processPayment() {
+        const phone = document.getElementById("reg-phone").value.trim();
         document.getElementById("reg-step2").style.display = "none";
         document.getElementById("reg-step3").style.display = "block";
         let secs = 60;
@@ -2037,16 +2039,47 @@
             showRegError("Payment timed out. Try again.");
           }
         }, 1000);
-        setTimeout(() => {
+        try {
+          const r = await fetch(API + "/payments/mpesa/register-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sale_id: 0, phone_number: phone }),
+          });
+          const d = await r.json();
+          if (!r.ok) {
+            throw new Error(d.message || d.detail || "M-Pesa request failed");
+          }
+          regCheckoutId = d.checkout_request_id;
+          document.getElementById("pay-sent-phone").textContent = phone;
+          const pollTimer = setInterval(async () => {
+            try {
+              const pr = await fetch(
+                API + "/payments/mpesa/" + regCheckoutId + "/status/public",
+              );
+              const pd = await pr.json();
+              if (pd.status === "SUCCESS") {
+                clearInterval(pollTimer);
+                clearInterval(countdownTimer);
+                document.getElementById("reg-step3").style.display = "none";
+                document.getElementById("reg-step4").style.display = "block";
+                document.getElementById("mpesa-receipt-display").textContent =
+                  pd.mpesa_receipt || "Confirmed";
+                toast("Payment confirmed! Welcome.", "success", 6000);
+              } else if (pd.status === "FAILED") {
+                clearInterval(pollTimer);
+                clearInterval(countdownTimer);
+                document.getElementById("reg-step3").style.display = "none";
+                document.getElementById("reg-step2").style.display = "block";
+                showRegError(pd.result_desc || "Payment failed");
+              }
+            } catch (e) {}
+          }, 3000);
+        } catch (e) {
           clearInterval(countdownTimer);
-          const fakeReceipt =
-            "QJ" + Math.random().toString(36).substr(2, 8).toUpperCase();
           document.getElementById("reg-step3").style.display = "none";
-          document.getElementById("reg-step4").style.display = "block";
-          document.getElementById("mpesa-receipt-display").textContent =
-            fakeReceipt;
-          toast("Payment confirmed! Welcome.", "success", 6000);
-        }, 4000);
+          document.getElementById("reg-step2").style.display = "block";
+          showRegError(e.message || "Could not reach M-Pesa service.");
+        }
       }
       async function goToSystemAfterPayment() {
         const name = document.getElementById("reg-name").value.trim();
