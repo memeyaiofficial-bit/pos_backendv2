@@ -2050,7 +2050,7 @@
             throw new Error(d.message || d.detail || "M-Pesa request failed");
           }
           regCheckoutId = d.checkout_request_id;
-          document.getElementById("pay-sent-phone").textContent = phone;
+          // phone display is already set in reg-step2 layout
           const pollTimer = setInterval(async () => {
             try {
               const pr = await fetch(
