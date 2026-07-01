@@ -84,6 +84,26 @@ def _generate_password() -> tuple[str, str]:
     return password, timestamp
 
 
+def _get_transaction_type(shortcode: str) -> str:
+    """
+    Infer the correct Daraja STK transaction type from the shortcode.
+
+    Till numbers typically start with 37 and require CustomerBuyGoodsOnline.
+    Paybill numbers typically start with 6 and require CustomerPayBillOnline.
+    """
+    shortcode = shortcode.strip()
+    if shortcode.startswith("37"):
+        return "CustomerBuyGoodsOnline"
+    if shortcode.startswith("6"):
+        return "CustomerPayBillOnline"
+
+    logger.warning(
+        "Unable to infer M-Pesa transaction type from shortcode=%s; defaulting to CustomerPayBillOnline",
+        shortcode,
+    )
+    return "CustomerPayBillOnline"
+
+
 def stk_push(
     phone_number: str,
     amount: int,
@@ -108,22 +128,32 @@ def stk_push(
         ValueError: if phone number format is invalid
     """
     phone_number = _normalise_phone(phone_number)
+    shortcode = settings.MPESA_SHORTCODE.strip()
     password, timestamp = _generate_password()
     token = get_access_token()
+    transaction_type = _get_transaction_type(shortcode)
 
     payload = {
-        "BusinessShortCode": settings.MPESA_SHORTCODE,
+        "BusinessShortCode": shortcode,
         "Password": password,
         "Timestamp": timestamp,
-        "TransactionType": "CustomerPayBillOnline",  # Use "CustomerBuyGoodsOnline" for Till
+        "TransactionType": transaction_type,
         "Amount": int(amount),                        # Must be integer, no decimals
         "PartyA": phone_number,                       # Customer phone
-        "PartyB": settings.MPESA_SHORTCODE,           # Your shortcode
+        "PartyB": shortcode,                          # Your shortcode
         "PhoneNumber": phone_number,
         "CallBackURL": settings.MPESA_CALLBACK_URL,
         "AccountReference": account_reference[:12],   # Max 12 chars
         "TransactionDesc": description[:13],          # Max 13 chars
     }
+
+    logger.debug(
+        "STK Push payload: shortcode=%s transaction_type=%s partyB=%s amount=%s",
+        shortcode,
+        transaction_type,
+        shortcode,
+        amount,
+    )
 
     url = f"{settings.MPESA_BASE_URL}/mpesa/stkpush/v1/processrequest"
 
