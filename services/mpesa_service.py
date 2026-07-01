@@ -265,19 +265,22 @@ def parse_callback(body: dict) -> dict:
 
 def normalise_phone(phone: str) -> str:
     """
-    Convert any Kenyan phone format to 254XXXXXXXXX.
-      07XXXXXXXX  → 2547XXXXXXXX
+    Convert Kenyan mobile phone formats to 2547XXXXXXXX.
+      07XXXXXXXX   → 2547XXXXXXXX
       +2547XXXXXXX → 2547XXXXXXX
-      2547XXXXXXX → 2547XXXXXXX (unchanged)
+      2547XXXXXXX  → 2547XXXXXXX (unchanged)
+
+    Rejects numbers that normalize to non-mobile prefixes like 2541.
     """
     phone = phone.strip().replace(" ", "").replace("-", "")
     if phone.startswith("+"):
         phone = phone[1:]
     if phone.startswith("0"):
         phone = "254" + phone[1:]
-    if not phone.startswith("254") or len(phone) != 12:
+
+    if len(phone) != 12 or not phone.startswith("2547"):
         raise ValueError(
-            f"Invalid Kenyan phone number: '{phone}'. "
+            f"Invalid Kenyan mobile number: '{phone}'. "
             "Expected format: 07XXXXXXXX or 2547XXXXXXXX"
         )
     return phone

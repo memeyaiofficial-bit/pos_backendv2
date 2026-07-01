@@ -17,6 +17,9 @@ RISKS MITIGATED:
     this re-enables them per connection.
 """
 
+import logging
+from pathlib import Path
+
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
 from typing import Generator
@@ -29,12 +32,23 @@ settings = get_settings()
 # ── Engine ────────────────────────────────────────────────────────────────────
 # connect_args with check_same_thread is SQLite-only.
 # For PostgreSQL (Render) we pass no connect_args.
+logger = logging.getLogger(__name__)
+
 connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
+database_url = settings.DATABASE_URL
+if database_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False, "timeout": 30}
+    # Resolve relative SQLite paths against the repository folder, not cwd.
+    if database_url.startswith("sqlite:///"):
+        relative_path = database_url[len("sqlite:///"):]
+        if relative_path and not Path(relative_path).is_absolute():
+            root_dir = Path(__file__).resolve().parent
+            absolute_path = root_dir / relative_path
+            database_url = f"sqlite:///{absolute_path.as_posix()}"
+            logger.info("Resolved SQLite database path to %s", absolute_path)
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    database_url,
     connect_args=connect_args,
     echo=settings.DEBUG,
     pool_pre_ping=True,

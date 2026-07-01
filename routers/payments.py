@@ -41,8 +41,9 @@ def register_payment(
     No sale_id needed — the transaction is tracked independently.
     """
     try:
+        normalized_phone = normalise_phone(payload.phone_number)
         result = stk_push(
-            phone_number=payload.phone_number,
+            phone_number=normalized_phone,
             amount=300,
             account_reference="REG-UZAPAP",
             description="Pharmacy POS reg",
@@ -287,6 +288,7 @@ def get_payment_status(
         .first()
     )
     if not txn:
+        logger.warning("M-Pesa status lookup failed: unknown CheckoutRequestID=%s", checkout_request_id)
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     # If still pending after 70s, query Safaricom directly
