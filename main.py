@@ -198,7 +198,7 @@ def health():
 # ── Frontend routes (must come AFTER all API routers) ───────────────
 @app.get("/", include_in_schema=False)
 def serve_landing():
-    return FileResponse("static/landing.html")
+    return FileResponse("static/index.html")
 
 @app.get("/app", include_in_schema=False)
 def serve_pos():

@@ -12,6 +12,7 @@ ENDPOINTS:
 import logging
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -38,7 +39,6 @@ def register_payment(
     """
     Public endpoint (no auth) — sends STK Push for KES 300 registration fee.
     No sale_id needed — the transaction is tracked independently.
-    (phone_number is in MpesaSTKPushIn.sale_id because the schema reuses that field)
     """
     try:
         result = stk_push(
@@ -47,6 +47,16 @@ def register_payment(
             account_reference="REG-UZAPAP",
             description="Pharmacy POS reg",
         )
+
+        # Check if Safaricom returned an error response code
+        response_code = result.get("ResponseCode")
+        if response_code and response_code != "0":
+            error_detail = result.get("ResponseDescription", f"Safaricom error code {response_code}")
+            logger.error("M-Pesa STK push rejected: %s", result)
+            raise HTTPException(
+                status_code=400,
+                detail=f"M-Pesa declined the request: {error_detail}. Check your Daraja credentials (consumer key/secret, passkey, shortcode)."
+            )
 
         txn = MpesaTransaction(
             sale_id=None,
@@ -65,9 +75,26 @@ def register_payment(
             message="M-Pesa prompt sent for KES 300 registration. Enter PIN on your phone.",
         )
 
+    except HTTPException:
+        db.rollback()
+        raise
+    except httpx.HTTPStatusError as e:
+        db.rollback()
+        logger.error("M-Pesa HTTP error: %s - %s", e, e.response.text if hasattr(e, 'response') else '')
+        raise HTTPException(
+            status_code=502,
+            detail=f"Safaricom API error (HTTP {e.response.status_code}): {e.response.text[:200] if hasattr(e, 'response') else str(e)}. Verify MPESA_CONSUMER_KEY and MPESA_CONSUMER_SECRET."
+        )
+    except ValueError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         db.rollback()
-        raise safe_error(e, "Could not send M-Pesa prompt.")
+        logger.error("M-Pesa unexpected error: %s", e, exc_info=True)
+        raise HTTPException(
+            status_code=400,
+            detail=f"M-Pesa request failed: {str(e)[:200]}. Check Daraja credentials and network."
+        )
 
 
 @router.post("/stk-push", response_model=MpesaSTKPushOut,
