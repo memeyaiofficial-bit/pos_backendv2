@@ -328,3 +328,4 @@ def get_payment_status_public(
         mpesa_receipt=txn.mpesa_receipt,
         amount=txn.amount,
         result_desc=txn.result_desc,
+    )
