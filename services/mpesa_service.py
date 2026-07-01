@@ -89,7 +89,7 @@ def _get_transaction_type(shortcode: str) -> str:
 
     If MPESA_TRANSACTION_TYPE is configured explicitly, use it.
     Otherwise infer from shortcode prefix:
-      - 37xxxx Till numbers -> CustomerBuyGoodsOnline
+      - 56xxxx Till numbers -> CustomerBuyGoodsOnline
       - 6xxxxx Paybill numbers -> CustomerPayBillOnline
     """
     explicit = settings.MPESA_TRANSACTION_TYPE
@@ -102,7 +102,7 @@ def _get_transaction_type(shortcode: str) -> str:
         return transaction_type
 
     shortcode = shortcode.strip()
-    if shortcode.startswith("37"):
+    if shortcode.startswith("56"):
         logger.info("Inferred M-Pesa transaction type CustomerBuyGoodsOnline for shortcode=%s", shortcode)
         return "CustomerBuyGoodsOnline"
     if shortcode.startswith("6"):
@@ -145,6 +145,7 @@ def stk_push(
     token = get_access_token()
     transaction_type = _get_transaction_type(shortcode)
 
+    party_b = settings.MPESA_PARTYB.strip() if settings.MPESA_PARTYB else shortcode
     payload = {
         "BusinessShortCode": shortcode,
         "Password": password,
@@ -152,12 +153,15 @@ def stk_push(
         "TransactionType": transaction_type,
         "Amount": int(amount),                        # Must be integer, no decimals
         "PartyA": phone_number,                       # Customer phone
-        "PartyB": shortcode,                          # Your shortcode
+        "PartyB": party_b,
         "PhoneNumber": phone_number,
         "CallBackURL": settings.MPESA_CALLBACK_URL,
         "AccountReference": account_reference[:12],   # Max 12 chars
         "TransactionDesc": description[:13],          # Max 13 chars
     }
+
+    if party_b != shortcode:
+        logger.info("Using explicit M-Pesa PartyB=%s instead of shortcode=%s", party_b, shortcode)
 
     logger.debug(
         "STK Push payload: shortcode=%s transaction_type=%s partyB=%s amount=%s",

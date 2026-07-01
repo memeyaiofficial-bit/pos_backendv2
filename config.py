@@ -83,10 +83,21 @@ class Settings(BaseSettings):
     MPESA_CONSUMER_KEY: SecretStr  # From Daraja portal
     MPESA_CONSUMER_SECRET: SecretStr  # From Daraja portal
     MPESA_SHORTCODE: str  # Your Paybill or Till number
+    MPESA_PARTYB: str | None = None  # Optional explicit PartyB for STK Push
     MPESA_TRANSACTION_TYPE: str | None = None  # Optional explicit Daraja STK transaction type
     MPESA_PASSKEY: SecretStr  # Lipa Na M-Pesa Online passkey from portal
     MPESA_CALLBACK_URL: str  # Public HTTPS URL Safaricom will POST results to
     MPESA_ENV: str = "sandbox"  # "sandbox" or "production"
+
+    @field_validator("MPESA_PARTYB")
+    @classmethod
+    def validate_mpesa_partyb(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        value = v.strip()
+        if not value.isdigit():
+            raise ValueError("MPESA_PARTYB must be numeric")
+        return value
 
     @field_validator("MPESA_TRANSACTION_TYPE")
     @classmethod
